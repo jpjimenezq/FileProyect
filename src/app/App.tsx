@@ -13,6 +13,11 @@ import { Taller } from '../pages/taller/Taller'
 
 const DocEditor = lazy(() => import('../pages/taller/DocEditor'))
 const SheetEditor = lazy(() => import('../pages/taller/SheetEditor'))
+const AdminLayout = lazy(() => import('../pages/admin/AdminLayout').then((m) => ({ default: m.AdminLayout })))
+const AdminDashboard = lazy(() => import('../pages/admin/Dashboard'))
+const AdminUsers = lazy(() => import('../pages/admin/Users'))
+const AdminDiscounts = lazy(() => import('../pages/admin/Discounts'))
+const AdminAudit = lazy(() => import('../pages/admin/Audit'))
 
 export default function App() {
   const { pathname, hash } = useLocation()
@@ -41,6 +46,12 @@ export default function App() {
             <Route path="/taller" element={<Taller />} />
             <Route path="/taller/documento" element={<DocEditor />} />
             <Route path="/taller/hoja" element={<SheetEditor />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="usuarios" element={<AdminUsers />} />
+              <Route path="codigos" element={<AdminDiscounts />} />
+              <Route path="actividad" element={<AdminAudit />} />
+            </Route>
             <Route path="/aviso-legal" element={<LegalNotice />} />
             {tools.map((t) => {
               const Tool = implemented[t.id]

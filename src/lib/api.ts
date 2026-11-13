@@ -12,10 +12,13 @@ export interface Capabilities {
 /** Error del servidor con el código que permite mostrar "crea una cuenta" o "mejora a Pro" */
 export class ApiError extends Error {
   code?: string
-  constructor(message: string, code?: string) {
+  /** Estado HTTP de la respuesta, si el error vino del servidor */
+  status?: number
+  constructor(message: string, code?: string, status?: number) {
     super(message)
     this.name = 'ApiError'
     this.code = code
+    this.status = status
   }
   get needsUpgrade() {
     return this.code === 'login' || this.code === 'quota'
@@ -104,18 +107,21 @@ export function useCapabilities() {
   return caps
 }
 
-/** POST JSON a la API; lanza ApiError con el mensaje y el código del servidor */
-export async function postJson<T>(url: string, body: unknown = {}): Promise<T> {
+/** Llamada JSON a la API (GET, POST, PATCH o DELETE); lanza ApiError con el mensaje, el código y el estado del servidor */
+export async function apiJson<T>(method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, body?: unknown): Promise<T> {
   let res: Response
   try {
-    res = await apiFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    res = await apiFetch(url, body === undefined ? { method } : { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   } catch {
     throw new ApiError('No se pudo conectar con el servidor.')
   }
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new ApiError(data.error ?? 'Error del servidor.', data.code)
+  if (!res.ok) throw new ApiError(data.error ?? 'Error del servidor.', data.code, res.status)
   return data as T
 }
+
+/** POST JSON a la API; lanza ApiError con el mensaje y el código del servidor */
+export const postJson = <T,>(url: string, body: unknown = {}) => apiJson<T>('POST', url, body)
 
 /** Sube el archivo al backend y devuelve el resultado; usa XHR para tener progreso de subida */
 export function callTool(id: string, file: File, options: Record<string, unknown>, onProgress: (fraction: number) => void) {

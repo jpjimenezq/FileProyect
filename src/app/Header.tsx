@@ -64,6 +64,7 @@ export function Header() {
           <ToolsMenu />
           <NavLink to="/taller" className={(s) => `hidden sm:block ${navLink(s)}`}>Taller</NavLink>
           <NavLink to="/precios" className={(s) => `hidden sm:block ${navLink(s)}`}>Precios</NavLink>
+          {isAdmin && <NavLink to="/admin" className={(s) => `hidden sm:block ${navLink(s)}`}>Admin</NavLink>}
           <MobileMenu signedIn={!!user} isAdmin={isAdmin} />
           {user ? (
             <Link to="/cuenta" className="ml-1 flex items-center gap-2 rounded-full bg-ink py-1.5 pl-1.5 pr-4 text-sm font-semibold text-white hover:bg-brand">
