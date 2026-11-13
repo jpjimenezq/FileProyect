@@ -67,7 +67,7 @@ export function Header() {
           {isAdmin && <NavLink to="/admin" className={(s) => `hidden sm:block ${navLink(s)}`}>Admin</NavLink>}
           <MobileMenu signedIn={!!user} isAdmin={isAdmin} />
           {user ? (
-            <Link to="/cuenta" className="ml-1 flex items-center gap-2 rounded-full bg-ink py-1.5 pl-1.5 pr-4 text-sm font-semibold text-white hover:bg-brand">
+            <Link to="/cuenta" aria-label="Mi cuenta" className="ml-0.5 flex items-center gap-2 rounded-full bg-ink p-1 text-sm font-semibold text-white hover:bg-brand sm:ml-1 sm:py-1.5 sm:pl-1.5 sm:pr-4">
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-lime text-xs font-bold text-ink">{(user.name || user.email)[0].toUpperCase()}</span>
               <span className="hidden sm:inline">{user.plan === 'pro' ? 'Pro' : 'Mi cuenta'}</span>
             </Link>
