@@ -3,13 +3,15 @@ import { BookOpen, Files, HardDrive, Layers, Plus, Scissors, Trash2 } from 'luci
 import { Link } from 'react-router-dom'
 import { PageThumb } from '../components/PageThumb'
 import { Segmented } from '../components/Illustrate'
-import { ToolFrame, Workspace, inputCls } from '../components/ToolFrame'
+import { Button, Checkbox, NumberField, Notice } from '../components/ui'
+import { ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx, Output } from '../components/ToolFrame'
 import { baseName } from '../lib/files'
 import { splitBySize } from '../lib/pdf/layout'
 import { extractPages, pdfBlob } from '../lib/pdf/ops'
 import { chapterRanges, readBookmarks } from '../lib/pdf/structure'
 import { usePdf } from '../lib/usePdf'
+import { useFitWidth } from '../lib/useFitWidth'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 
 type Mode = 'ranges' | 'every' | 'all' | 'size' | 'chapters'
@@ -21,16 +23,19 @@ const span = (r: Range) => Array.from({ length: r.to - r.from + 1 }, (_, i) => r
 /** Cuadro punteado con la primera y la última página del grupo, como en un visor de rangos */
 function RangeBox({ pdf, title, pages }: { pdf: PDFDocumentProxy; title: string; pages: number[] }) {
   const shown = pages.length <= 2 ? pages : [pages[0], pages[pages.length - 1]]
+  // el cuadro se encoge en pantallas estrechas para no provocar scroll horizontal
+  const fit = useFitWidth(400, 64)
+  const thumb = Math.max(80, Math.min(150, Math.floor((fit - 110) / 2)))
   return (
-    <div className="flex flex-col items-center gap-2">
-      <p className="text-sm text-gray-600">{title}</p>
-      <div className="flex items-center gap-3 rounded border border-dashed border-gray-400 p-3">
+    <div className="flex max-w-full flex-col items-center gap-2">
+      <p className="text-sm text-ink/60">{title}</p>
+      <div className="flex max-w-full items-center gap-2 rounded-2xl border border-dashed border-ink/25 p-2.5 sm:gap-3 sm:p-3">
         {shown.map((n, i) => (
-          <div key={n} className="flex items-center gap-3">
-            {i === 1 && pages.length > 2 && <span className="text-xl leading-none text-gray-500">···</span>}
-            <div className="flex flex-col items-center rounded bg-white p-2 shadow-sm">
-              <PageThumb pdf={pdf} pageNum={n} width={150} />
-              <span className="mt-1 text-xs text-gray-600">{n}</span>
+          <div key={n} className="flex items-center gap-2 sm:gap-3">
+            {i === 1 && pages.length > 2 && <span className="text-xl leading-none text-ink/45">···</span>}
+            <div className="flex flex-col items-center rounded-lg bg-white p-1.5 shadow-sm sm:p-2">
+              <PageThumb pdf={pdf} pageNum={n} width={thumb} />
+              <span className="mt-1 rounded-full bg-paper px-2 py-0.5 text-xs font-medium text-ink/60">{n}</span>
             </div>
           </div>
         ))}
@@ -79,7 +84,7 @@ function SplitWork({ files, run, reset }: FrameCtx) {
       return parts.map((p, i) => ({
         name: `${baseName(file)}_${i + 1}.pdf`,
         blob: pdfBlob(p.bytes),
-        note: i === 0 && big ? `${big} página(s) pesan por sí solas más de ${maxMb} MB: van en su propio archivo.` : undefined,
+        note: i === 0 && big ? `${big === 1 ? '1 página pesa' : `${big} páginas pesan`} por sí ${big === 1 ? 'sola' : 'solas'} más de ${maxMb} MB y ${big === 1 ? 'va' : 'van'} en su propio archivo.` : undefined,
       }))
     }
     if (mode === 'ranges' && merge) return [{ name: `${baseName(file)}_dividido.pdf`, blob: pdfBlob(await extractPages(file, groups.flat())) }]
@@ -96,13 +101,13 @@ function SplitWork({ files, run, reset }: FrameCtx) {
   return (
     <Workspace
       main={
-        <div className="flex flex-wrap justify-center gap-8 py-4">
-          <p className="w-full text-center text-sm text-gray-500">
-            {file.name} · {numPages} págs. · <button onClick={reset} className="text-brand hover:underline">Cambiar archivo</button>
+        <div className="flex flex-wrap justify-center gap-6 py-4 sm:gap-8">
+          <p className="w-full text-center text-sm text-ink/60">
+            <span className="break-all">{file.name}</span> · {numPages} {numPages === 1 ? 'pág.' : 'págs.'} · <button onClick={reset} className="text-brand hover:underline">Cambiar archivo</button>
           </p>
-          {mode === 'size' && <p className="w-full max-w-md rounded-2xl bg-paper p-5 text-center text-sm text-ink/65">Cortaremos el PDF en archivos de <b>{maxMb} MB como máximo</b>, con el mayor número de páginas posible en cada uno. Verás cuántos salen al terminar.</p>}
+          {mode === 'size' && <Notice kind="info" className="w-full max-w-md">Cortaremos el PDF en archivos de <b>{maxMb} MB como máximo</b>. Verás cuántos salen al terminar.</Notice>}
           {pdf && groups.slice(0, LIMIT).map((g, i) => <RangeBox key={`${mode}-${i}-${g[0]}-${g[g.length - 1]}`} pdf={pdf} title={mode === 'chapters' ? chapters?.[i]?.title ?? `Capítulo ${i + 1}` : `${mode === 'ranges' ? 'Rango' : 'Archivo'} ${i + 1}`} pages={g} />)}
-          {groups.length > LIMIT && <p className="self-center text-sm text-gray-500">… y {groups.length - LIMIT} más</p>}
+          {groups.length > LIMIT && <p className="self-center text-sm text-ink/60">… y {groups.length - LIMIT} más</p>}
         </div>
       }
       side={
@@ -123,49 +128,34 @@ function SplitWork({ files, run, reset }: FrameCtx) {
           {mode === 'ranges' && (
             <>
               <div className="flex flex-col gap-3">
-                {ranges.map((r, i) => {
-                  const bad = !validRange(r, numPages)
-                  return (
-                    <div key={i} className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between text-sm font-medium">
-                        Rango {i + 1}
-                        {ranges.length > 1 && <button aria-label={`Quitar rango ${i + 1}`} onClick={() => setRanges(ranges.filter((_, j) => j !== i))} className="text-gray-400 hover:text-brand"><Trash2 size={15} /></button>}
-                      </div>
-                      <div className="grid grid-cols-[auto_1fr_auto_1fr] items-center gap-2 text-sm text-gray-600">
-                        de
-                        <input type="number" min={1} max={numPages} aria-label={`Rango ${i + 1}, desde`} className={`${inputCls} ${bad ? 'border-red-400' : ''}`} value={r.from} onChange={(e) => setRange(i, { from: Number(e.target.value) })} />
-                        a
-                        <input type="number" min={1} max={numPages} aria-label={`Rango ${i + 1}, hasta`} className={`${inputCls} ${bad ? 'border-red-400' : ''}`} value={r.to} onChange={(e) => setRange(i, { to: Number(e.target.value) })} />
-                      </div>
+                {ranges.map((r, i) => (
+                  <div key={i} className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-sm font-semibold">
+                      Rango {i + 1}
+                      {ranges.length > 1 && <button aria-label={`Quitar rango ${i + 1}`} onClick={() => setRanges(ranges.filter((_, j) => j !== i))} className="flex h-8 w-8 items-center justify-center rounded-full text-ink/45 transition hover:bg-ink/5 hover:text-brand pointer-coarse:h-10 pointer-coarse:w-10"><Trash2 size={16} /></button>}
                     </div>
-                  )
-                })}
+                    <div className="grid grid-cols-[auto_1fr_auto_1fr] items-center gap-2 text-sm text-ink/60">
+                      de
+                      <NumberField ariaLabel={`Rango ${i + 1}, desde`} min={1} max={numPages} value={r.from} onChange={(v) => setRange(i, { from: v })} />
+                      a
+                      <NumberField ariaLabel={`Rango ${i + 1}, hasta`} min={1} max={numPages} value={r.to} onChange={(v) => setRange(i, { to: v })} />
+                    </div>
+                  </div>
+                ))}
               </div>
-              {invalid && <p className="text-xs text-red-600">Cada rango debe estar entre 1 y {numPages}, con el inicio menor o igual que el final.</p>}
-              <button onClick={addRange} className="flex items-center justify-center gap-1.5 rounded-lg border border-brand py-2 text-sm font-semibold text-brand hover:bg-brand/10"><Plus size={16} /> Añadir rango</button>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={merge} onChange={(e) => setMerge(e.target.checked)} /> Unir todos los rangos en un único PDF</label>
+              {invalid && <Notice kind="error">Usa páginas de 1 a {numPages}, con el inicio menor o igual que el final.</Notice>}
+              <Button icon={Plus} className="border-brand text-brand hover:bg-brand/10" onClick={addRange}>Añadir rango</Button>
+              <Checkbox checked={merge} onChange={setMerge} label="Unir todos los rangos en un único PDF" />
             </>
           )}
 
           {mode === 'chapters' && chapters && chapters.length === 0 && (
-            <p className="rounded-xl bg-paper p-3 text-sm text-ink/65">Este PDF no tiene marcadores. Puedes crearlos en <Link to="/marcadores-pdf" className="font-semibold text-brand hover:underline">Marcadores del PDF</Link>.</p>
+            <Notice kind="info">Este PDF no tiene marcadores. Puedes crearlos en <Link to="/marcadores-pdf" className="font-semibold text-brand hover:underline">Marcadores del PDF</Link>.</Notice>
           )}
 
-          {mode === 'size' && (
-            <label className="flex items-center gap-2 text-sm">
-              Peso máximo
-              <input type="number" min={0.1} step={0.5} className={`${inputCls} w-24`} value={maxMb} onChange={(e) => setMaxMb(Number(e.target.value))} />
-              MB
-            </label>
-          )}
+          {mode === 'size' && <NumberField label="Peso máximo" unit="MB" min={0.1} step={0.5} value={maxMb} onChange={setMaxMb} />}
 
-          {mode === 'every' && (
-            <label className="flex items-center gap-2 text-sm">
-              Dividir cada
-              <input type="number" min={1} max={Math.max(1, numPages)} className={`${inputCls} w-20`} value={every} onChange={(e) => setEvery(Number(e.target.value))} />
-              páginas
-            </label>
-          )}
+          {mode === 'every' && <NumberField label="Dividir cada" unit="págs." min={1} max={Math.max(1, numPages)} value={every} onChange={setEvery} />}
         </>
       }
       action={{ label: 'Dividir PDF', disabled: mode === 'size' ? !numPages || !(maxMb > 0) : !groups.length || invalid, onClick: start }}

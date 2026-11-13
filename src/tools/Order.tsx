@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PageThumb } from '../components/PageThumb'
+import { Button, Notice } from '../components/ui'
 import { SortableGrid } from '../components/SortableGrid'
 import { ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
@@ -18,15 +19,18 @@ function OrderWork({ files, run }: FrameCtx) {
   return (
     <Workspace
       main={
-        error ? <p className="text-center text-red-600">{error}</p> : (
+        error ? <Notice kind="error">{error}</Notice> : (
           <SortableGrid
             items={order}
             keyOf={(n) => n}
             onChange={setOrder}
             render={(n, i) => (
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center gap-1">
                 {pdf && <PageThumb pdf={pdf} pageNum={n} width={180} />}
-                <span className="text-xs text-gray-600">{i + 1}{n !== i + 1 ? ` (antes ${n})` : ''}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-ink/70">
+                  <span className="rounded-full bg-paper px-2 py-0.5">{i + 1}</span>
+                  {n !== i + 1 && <span className="rounded-full bg-brand/10 px-2 py-0.5 text-brand">antes p. {n}</span>}
+                </span>
               </div>
             )}
           />
@@ -34,10 +38,10 @@ function OrderWork({ files, run }: FrameCtx) {
       }
       side={
         <>
-          <p className="text-sm text-gray-600">Arrastra las páginas para cambiar su orden.</p>
-          <div className="flex gap-2 text-sm">
-            <button className="flex-1 rounded-lg border border-gray-300 py-1.5 hover:bg-gray-50" onClick={() => setOrder([...order].reverse())}>Invertir</button>
-            <button className="flex-1 rounded-lg border border-gray-300 py-1.5 hover:bg-gray-50" onClick={() => setOrder([...order].sort((a, b) => a - b))}>Restablecer</button>
+          <p className="text-sm text-ink/60">Arrastra las páginas para cambiar su orden. En el móvil usa las flechas.</p>
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={() => setOrder([...order].reverse())}>Invertir orden</Button>
+            <Button variant="ghost" className="flex-1" disabled={!changed} onClick={() => setOrder([...order].sort((a, b) => a - b))}>Restablecer</Button>
           </div>
         </>
       }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check } from 'lucide-react'
 import { PageThumb } from '../components/PageThumb'
+import { Button, Notice } from '../components/ui'
 import { Field, ToolFrame, Workspace, inputCls } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
 import { baseName } from '../lib/files'
@@ -33,13 +34,13 @@ function SelectWork({ files, run, mode }: FrameCtx & { mode: 'delete' | 'extract
   return (
     <Workspace
       main={
-        error ? <p className="text-center text-red-600">{error}</p> : (
+        error ? <Notice kind="error">{error}</Notice> : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] justify-items-center gap-4">
             {pdf && all.map((n) => (
-              <button key={n} onClick={() => toggle(n)} className={`relative rounded-lg p-1 ${selected.has(n) ? (del ? 'bg-red-100 outline-2 outline-red-500' : 'bg-green-100 outline-2 outline-green-600') : 'hover:bg-gray-100'}`}>
+              <button key={n} onClick={() => toggle(n)} aria-pressed={selected.has(n)} aria-label={`Página ${n}`} className={`relative flex flex-col items-center gap-1 rounded-xl p-1.5 ${selected.has(n) ? (del ? 'bg-red-50 outline-2 outline-red-500' : 'bg-brand/10 outline-2 outline-brand') : 'hover:bg-ink/5'}`}>
                 <div className={selected.has(n) && del ? 'opacity-40' : ''}><PageThumb pdf={pdf} pageNum={n} width={180} /></div>
-                {selected.has(n) && <span className={`absolute right-1 top-1 rounded-full p-1 text-white ${del ? 'bg-red-500' : 'bg-green-600'}`}><Check size={12} /></span>}
-                <span className="text-xs text-gray-600">{n}</span>
+                {selected.has(n) && <span className={`absolute right-2 top-2 rounded-full p-1 text-white ${del ? 'bg-red-500' : 'bg-brand'}`}><Check size={12} /></span>}
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${selected.has(n) ? (del ? 'bg-red-100 text-red-700' : 'bg-brand/15 text-brand') : 'bg-paper text-ink/60'}`}>{n}</span>
               </button>
             ))}
           </div>
@@ -47,19 +48,23 @@ function SelectWork({ files, run, mode }: FrameCtx & { mode: 'delete' | 'extract
       }
       side={
         <>
-          <p className="text-sm text-gray-600">{del ? 'Haz clic en las páginas que quieres eliminar.' : 'Haz clic en las páginas que quieres extraer.'}</p>
-          <Field label="Seleccionar por rango">
+          <p className="text-sm text-ink/60">{del ? 'Toca las páginas que quieres eliminar.' : 'Toca las páginas que quieres extraer.'}</p>
+          <Field label="Seleccionar por rango" hint="Por ejemplo: 1-3, 5, 8-10">
             <div className="flex gap-2">
-              <input className={`${inputCls} min-w-0 flex-1`} placeholder="1-3, 5" value={text} onChange={(e) => setText(e.target.value)} />
-              <button onClick={applyRange} className="rounded-lg border border-gray-300 px-3 text-sm hover:bg-gray-50">Aplicar</button>
+              <input className={`${inputCls} min-w-0 flex-1`} placeholder="1-3, 5" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') applyRange() }} />
+              <Button onClick={applyRange}>Aplicar</Button>
             </div>
-            {rangeError && <span className="text-xs font-normal text-red-600">{rangeError}</span>}
           </Field>
-          <div className="flex gap-2 text-sm">
-            <button className="flex-1 rounded-lg border border-gray-300 py-1.5 hover:bg-gray-50" onClick={() => setSelected(new Set(all))}>Todas</button>
-            <button className="flex-1 rounded-lg border border-gray-300 py-1.5 hover:bg-gray-50" onClick={() => setSelected(new Set())}>Ninguna</button>
+          {rangeError && <Notice kind="error">{rangeError}</Notice>}
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={() => setSelected(new Set(all))}>Todas</Button>
+            <Button className="flex-1" onClick={() => setSelected(new Set())}>Ninguna</Button>
           </div>
-          <p className="text-sm">{selected.size} seleccionadas · el resultado tendrá <b>{kept.length}</b> páginas.</p>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className={`rounded-full px-3 py-1 font-medium ${del ? 'bg-red-50 text-red-700' : 'bg-brand/10 text-brand'}`}>{selected.size} {selected.size === 1 ? 'seleccionada' : 'seleccionadas'}</span>
+            <span className="rounded-full bg-paper px-3 py-1 text-ink/70">Resultado: {kept.length} {kept.length === 1 ? 'página' : 'páginas'}</span>
+          </div>
+          {selected.size > 0 && !kept.length && <Notice kind="warn">Así no quedaría ninguna página. Deja al menos una.</Notice>}
         </>
       }
       action={{
