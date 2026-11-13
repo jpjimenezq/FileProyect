@@ -1,5 +1,5 @@
 import type { Progress } from './pdf/ops'
-import { ApiError } from './api'
+import { ApiError, apiFetch } from './api'
 
 export const CHUNK = 9000
 export const MAX_DOC_CHARS = 200_000
@@ -9,7 +9,7 @@ export type AiTask = 'summarize' | 'translate' | 'markdown'
 export async function aiCall(task: AiTask, text: string, options: Record<string, string> = {}): Promise<string> {
   let res: Response
   try {
-    res = await fetch(`/api/ai/${task}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, options }) })
+    res = await apiFetch(`/api/ai/${task}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, options }) })
   } catch {
     throw new Error('No se pudo conectar con el servidor.')
   }

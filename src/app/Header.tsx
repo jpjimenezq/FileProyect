@@ -9,7 +9,7 @@ import { ToolsMenu } from './ToolsMenu'
 const navLink = ({ isActive }: { isActive: boolean }) => `rounded-full px-3.5 py-2 text-sm font-semibold hover:bg-ink/5 ${isActive ? 'bg-ink/5 text-brand' : ''}`
 
 /** En pantallas pequeñas, Taller, Precios y la cuenta van en un menú desplegable */
-function MobileMenu({ signedIn }: { signedIn: boolean }) {
+function MobileMenu({ signedIn, isAdmin }: { signedIn: boolean; isAdmin: boolean }) {
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
   const { pathname } = useLocation()
@@ -32,6 +32,8 @@ function MobileMenu({ signedIn }: { signedIn: boolean }) {
             <Link to="/taller" className={item}>Taller</Link>
             <Link to="/precios" className={item}>Precios</Link>
             <Link to="/cuenta" className={item}>{signedIn ? 'Mi cuenta' : 'Entrar'}</Link>
+            {!signedIn && <Link to="/cuenta?registro=1" className={item}>Crear cuenta</Link>}
+            {isAdmin && <Link to="/admin" className={item}>Panel de administración</Link>}
           </nav>
         </div>
       )}
@@ -40,9 +42,8 @@ function MobileMenu({ signedIn }: { signedIn: boolean }) {
 }
 
 export function Header() {
-  const { me } = useAuth()
+  const { user, isAdmin } = useAuth()
   const openPalette = useOpenPalette()
-  const user = me?.user
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur">
@@ -63,10 +64,10 @@ export function Header() {
           <ToolsMenu />
           <NavLink to="/taller" className={(s) => `hidden sm:block ${navLink(s)}`}>Taller</NavLink>
           <NavLink to="/precios" className={(s) => `hidden sm:block ${navLink(s)}`}>Precios</NavLink>
-          <MobileMenu signedIn={!!user} />
+          <MobileMenu signedIn={!!user} isAdmin={isAdmin} />
           {user ? (
             <Link to="/cuenta" className="ml-1 flex items-center gap-2 rounded-full bg-ink py-1.5 pl-1.5 pr-4 text-sm font-semibold text-white hover:bg-brand">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-lime text-xs font-bold text-ink">{user.email[0].toUpperCase()}</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-lime text-xs font-bold text-ink">{(user.name || user.email)[0].toUpperCase()}</span>
               <span className="hidden sm:inline">{user.plan === 'pro' ? 'Pro' : 'Mi cuenta'}</span>
             </Link>
           ) : (

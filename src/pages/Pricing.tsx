@@ -4,6 +4,7 @@ import { Check, ChevronDown, Minus } from 'lucide-react'
 import { ApiError, postJson } from '../lib/api'
 import { aiPages, useAuth } from '../lib/auth'
 import { tools } from '../tools/catalog'
+import { Notice } from '../components/ui'
 
 const FAQ = [
   ['¿Qué pasa con mis archivos?', 'Solo los usamos para darte el resultado y no los conservamos: se descartan automáticamente al terminar. Las herramientas de IA envían el texto del documento a un proveedor externo (DeepSeek), así que evítalas con documentos confidenciales.'],
@@ -22,12 +23,14 @@ function Feature({ children, off }: { children: React.ReactNode; off?: boolean }
 }
 
 export function Pricing() {
-  const { me } = useAuth()
+  const { me, refresh } = useAuth()
   const navigate = useNavigate()
   const [interval, setInterval] = useState<'month' | 'year'>('year')
   const [busy, setBusy] = useState(false)
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState<string>()
+  const [code, setCode] = useState('')
+  const [granted, setGranted] = useState<string>()
 
   const plans = me?.plans
   const price = interval === 'year' ? me?.prices.year : me?.prices.month
@@ -37,9 +40,16 @@ export function Pricing() {
     if (!me?.user) return navigate('/cuenta?registro=1&plan=pro')
     setBusy(true)
     setError(undefined)
+    setGranted(undefined)
     try {
-      const { url } = await postJson<{ url: string }>('/api/billing/checkout', { interval })
-      window.location.href = url
+      const body = code.trim() ? { interval, code: code.trim() } : { interval }
+      const r = await postJson<{ url: string | null; granted?: boolean; until?: number | null }>('/api/billing/checkout', body)
+      if (r.granted) {
+        setGranted(r.until ? `¡Código aplicado! Tienes Pro hasta el ${new Date(r.until).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}.` : '¡Código aplicado! Ya tienes Pro.')
+        setCode('')
+        setBusy(false)
+        await refresh()
+      } else if (r.url) window.location.href = r.url
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo iniciar el pago.')
       setBusy(false)
@@ -71,7 +81,8 @@ export function Pricing() {
         </div>
       </div>
 
-      {error && <p role="alert" className="mx-auto mt-6 max-w-xl rounded-2xl border border-red-200 bg-white p-3 text-center text-sm text-red-700">{error}</p>}
+      {error && <Notice kind="error" className="mx-auto mt-6 max-w-xl">{error}</Notice>}
+      {granted && <Notice kind="success" className="mx-auto mt-6 max-w-xl">{granted}</Notice>}
 
       <div className="mt-10 grid items-stretch gap-5 md:grid-cols-3">
         <div className="flex flex-col rounded-3xl border border-line bg-white p-7">
@@ -122,11 +133,16 @@ export function Pricing() {
               <span>Pido que Pro empiece de inmediato. Entiendo que, si desisto dentro de los 14 días, pagaré la parte proporcional ya usada. Acepto los <Link to="/terminos" target="_blank" className="underline">términos</Link>.</span>
             </label>
           )}
+          {me?.user && me.plan !== 'pro' && (
+            <label className="mt-4 flex flex-col gap-1 text-xs font-semibold text-ink/70">¿Tienes un código? <span className="font-normal">(opcional)</span>
+              <input value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" placeholder="Código de descuento o regalo" className="rounded-xl border border-line bg-paper px-3 py-2 text-sm font-normal uppercase placeholder:normal-case focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/15" />
+            </label>
+          )}
           {me?.plan === 'pro' ? (
             <button onClick={portal} disabled={busy} className="mt-7 rounded-2xl bg-ink py-3.5 font-semibold text-white hover:bg-brand disabled:opacity-50">Gestionar suscripción</button>
           ) : (
-            <button onClick={upgrade} disabled={busy || me?.billing === false || (!!me?.user && !consent)} className="mt-7 rounded-2xl bg-brand py-3.5 font-semibold text-white shadow-lg shadow-brand/30 hover:bg-brand-dark disabled:opacity-50">
-              {me?.billing === false ? 'Pagos no disponibles' : busy ? 'Un momento…' : 'Hazte Pro'}
+            <button onClick={upgrade} disabled={busy || (me?.billing === false && !(me.user && code.trim())) || (!!me?.user && !consent)} className="mt-7 rounded-2xl bg-brand py-3.5 font-semibold text-white shadow-lg shadow-brand/30 hover:bg-brand-dark disabled:opacity-50">
+              {busy ? 'Un momento…' : me?.billing === false ? (me.user && code.trim() ? 'Aplicar código' : 'Pagos no disponibles') : 'Hazte Pro'}
             </button>
           )}
         </div>
