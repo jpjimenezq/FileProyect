@@ -35,7 +35,7 @@ export function ImagePicker({ file, onChange }: { file?: File; onChange: (f?: Fi
       <input ref={input} type="file" hidden accept={IMAGE_TYPES} onChange={(e) => { take(e.target.files); e.target.value = '' }} />
       {file ? (
         <div className="flex items-center gap-3 rounded-2xl border border-line bg-paper p-2.5">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm [background-image:repeating-conic-gradient(#e5e7eb_0%_25%,#fff_0%_50%)] [background-size:12px_12px]">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm [background-image:repeating-conic-gradient(#e7e1d5_0%_25%,#fff_0%_50%)] [background-size:12px_12px]">
             {url && <img src={url} alt="" className="max-h-full max-w-full" />}
           </span>
           <span className="min-w-0 flex-1">

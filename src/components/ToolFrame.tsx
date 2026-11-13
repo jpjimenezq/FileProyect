@@ -11,6 +11,7 @@ import { peekHandoff } from '../lib/handoff'
 import { matchesAccept } from '../lib/files'
 import { categoryOf, toolById } from '../tools/catalog'
 import { useRangeFill } from './ui/useRangeFill'
+import { Notice } from './ui/Notice'
 
 export interface Output {
   name: string
@@ -94,34 +95,36 @@ export function ToolFrame({ id, accept, multiple, children, emptyExtra, notice }
 
   return (
     <div ref={top} className="mx-auto max-w-6xl scroll-mt-16 px-4 py-8">
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <p className="mb-3 text-sm text-ink/60">
           <Link to="/" className="hover:text-brand">Herramientas</Link> / {categoryOf(tool).name}
         </p>
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-md" style={{ background: categoryOf(tool).color }}>
-            <Icon size={28} />
+        <div className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 md:grid-rows-[auto_auto]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-md md:row-span-2 md:h-14 md:w-14 md:rounded-2xl" style={{ background: categoryOf(tool).color }}>
+            <Icon className="h-5 w-5 md:h-7 md:w-7" />
           </span>
-          <div>
-            <h1 className="text-3xl font-bold md:text-4xl">{tool.name}</h1>
-            <p className="mt-1 text-ink/70">{tool.description}</p>
-          </div>
+          <h1 className="min-w-0 text-2xl font-bold md:self-end md:text-4xl">{tool.name}</h1>
+          <p className="col-span-2 text-sm text-ink/70 md:col-span-1 md:self-start md:text-base">{tool.description}</p>
         </div>
       </div>
 
       {error && (
-        <div role="alert" className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-red-200 border-l-4 border-l-red-500 bg-white px-4 py-3 text-sm">
-          <p className="flex-1 text-red-800">{error.message}</p>
-          {error.code === 'login' && <Link to="/cuenta?registro=1" className="rounded-xl bg-brand px-4 py-2 font-semibold text-white hover:bg-brand-dark">Crear cuenta gratis</Link>}
-          {(error.code === 'login' || error.code === 'quota') && <Link to="/precios" className="font-semibold text-brand hover:underline">Ver planes</Link>}
-        </div>
+        <Notice kind="error" onClose={() => setError(undefined)} className="mb-6">
+          <p>{error.message}</p>
+          {(error.code === 'login' || error.code === 'quota') && (
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              {error.code === 'login' && <Link to="/cuenta?registro=1" className="rounded-xl bg-brand px-4 py-2 font-semibold text-white hover:bg-brand-dark">Crear cuenta gratis</Link>}
+              <Link to="/precios" className="font-semibold text-brand hover:underline">Ver planes</Link>
+            </div>
+          )}
+        </Notice>
       )}
 
       {stage === 'processing' && (
         <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-3xl border border-line bg-white py-14 shadow-sm">
           <Loader2 className="animate-spin text-brand" size={40} />
-          <p className="font-medium">Procesando…</p>
-          <div className="h-2 w-64 overflow-hidden rounded-full bg-paper">
+          <p className="font-medium">Procesando… <span className="tabular-nums text-ink/60">{Math.round(progress * 100)} %</span></p>
+          <div className="h-2 w-64 max-w-[80%] overflow-hidden rounded-full bg-paper" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
             <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />
           </div>
         </div>
@@ -171,27 +174,36 @@ export function ToolFrame({ id, accept, multiple, children, emptyExtra, notice }
 
 export function Workspace({ main, side, action }: { main: ReactNode; side?: ReactNode; action: { label: string; onClick: () => void; disabled?: boolean } }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_21rem]">
+    // en < lg el botón vive en una barra fija inferior (solo mientras existe el Workspace): el contenido deja hueco debajo
+    <div className="grid gap-6 max-lg:pb-24 lg:grid-cols-[1fr_21rem]">
       <div className="dots min-w-0 rounded-3xl border border-line bg-white p-4 md:p-6">{main}</div>
       <aside className="flex h-fit min-w-0 flex-col gap-5 rounded-3xl border border-line bg-white p-4 shadow-sm sm:p-5 lg:sticky lg:top-24">
         {side}
-        <button
-          onClick={action.onClick}
-          disabled={action.disabled}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-brand px-6 py-4 text-lg font-semibold text-white shadow-lg shadow-brand/30 transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-        >
-          {action.label} <ArrowRight size={20} />
-        </button>
+        <div className="max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30 max-lg:border-t max-lg:border-line max-lg:bg-white max-lg:px-4 max-lg:pt-3 max-lg:pb-[calc(0.75rem+env(safe-area-inset-bottom))] max-lg:shadow-[0_-6px_20px_rgba(22,21,43,0.10)] lg:contents">
+          <button
+            onClick={action.onClick}
+            disabled={action.disabled}
+            className="mx-auto flex w-full max-w-lg items-center justify-center gap-2 rounded-2xl bg-brand px-6 py-3.5 text-lg font-semibold text-white shadow-lg shadow-brand/30 transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none lg:max-w-none lg:py-4"
+          >
+            {action.label} <ArrowRight size={20} />
+          </button>
+        </div>
       </aside>
     </div>
   )
 }
 
-export function Field({ label, children }: { label: string; children: ReactNode }) {
+export function Field({ label, children, hint, value }: { label: string; children: ReactNode; /** Ayuda de una línea bajo el control */ hint?: string; /** Valor actual, a la derecha de la etiqueta */ value?: ReactNode }) {
   return (
     <label className="flex min-w-0 flex-col gap-1.5 text-sm font-semibold">
-      {label}
+      {value === undefined ? label : (
+        <span className="flex items-baseline justify-between gap-2">
+          <span>{label}</span>
+          <span className="font-normal tabular-nums text-ink/60">{value}</span>
+        </span>
+      )}
       {children}
+      {hint && <span className="text-xs font-normal leading-snug text-ink/55">{hint}</span>}
     </label>
   )
 }

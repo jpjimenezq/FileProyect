@@ -2,6 +2,19 @@ import { useRef, useState } from 'react'
 import { FilePlus2, MousePointerClick, UploadCloud } from 'lucide-react'
 import { MAX_SIZE, matchesAccept } from '../lib/files'
 
+const LIMIT_MB = Math.round(MAX_SIZE / 1024 / 1024)
+
+/** Descripción corta de lo que admite la zona, a partir de `accept` */
+export function acceptHint(accept: string): string {
+  const a = accept.toLowerCase()
+  const parts = a.split(',').map((s) => s.trim())
+  let kind = 'Archivos'
+  if (parts.every((p) => p === '.pdf' || p === 'application/pdf')) kind = 'PDF'
+  else if (parts.every((p) => p.startsWith('image/') || /^\.(jpe?g|png|webp|gif|bmp|tiff?)$/.test(p))) kind = 'Imágenes'
+  else if (parts.length <= 4 && parts.every((p) => /^\.[a-z0-9]+$/.test(p))) kind = parts.map((p) => p.slice(1).toUpperCase()).join(', ')
+  return `${kind} · hasta ${LIMIT_MB} MB`
+}
+
 interface Props {
   accept: string
   multiple?: boolean
@@ -39,6 +52,7 @@ export function Dropzone({ accept, multiple, label, onFiles, onError }: Props) {
       <button type="button" onClick={() => input.current?.click()} className="min-h-12 rounded-2xl bg-ink px-8 py-3 text-lg font-semibold text-white shadow-lg transition hover:bg-brand active:scale-[0.98]">
         {label}
       </button>
+      <p className="-mt-2 text-xs text-ink/55">{acceptHint(accept)}</p>
       <input ref={input} type="file" hidden accept={accept} multiple={multiple} onChange={(e) => { handle(e.target.files); e.target.value = '' }} />
     </div>
   )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import { AlertCircle, Loader2, X } from 'lucide-react'
 import { fmtSize } from '../lib/files'
 import { usePdf } from '../lib/usePdf'
 import { PageThumb } from './PageThumb'
@@ -7,7 +7,7 @@ import { ImageLightbox, ZoomButton } from './Lightbox'
 
 export function RemoveButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} aria-label="Quitar" className="absolute -right-2 -top-2 z-10 rounded-full bg-gray-700 p-1 text-white shadow hover:bg-brand">
+    <button onClick={onClick} aria-label="Quitar" className="absolute -right-2 -top-2 z-10 rounded-full bg-ink/80 p-1 text-white shadow hover:bg-brand">
       <X size={14} />
     </button>
   )
@@ -21,10 +21,13 @@ export function PdfCard({ file, onRemove, showPages }: { file: File; onRemove?: 
       {pdf ? (
         <PageThumb pdf={pdf} pageNum={1} width={180} />
       ) : (
-        <div className="flex h-[234px] w-[180px] items-center justify-center bg-white p-2 text-center text-xs text-red-600 shadow">{error ?? 'Cargando…'}</div>
+        <div className={`flex h-[234px] w-[180px] flex-col items-center justify-center gap-2 bg-white p-3 text-center text-xs shadow ${error ? 'text-red-600' : 'text-ink/55'}`} role={error ? 'alert' : undefined}>
+          {error ? <AlertCircle size={22} /> : <Loader2 size={22} className="animate-spin text-brand" />}
+          {error ?? 'Cargando…'}
+        </div>
       )}
       <p className="w-full truncate text-center text-xs font-medium" title={file.name}>{file.name}</p>
-      <p className="text-xs text-gray-500">{fmtSize(file.size)}{showPages && numPages ? ` · ${numPages} págs.` : ''}</p>
+      <p className="text-xs text-ink/60">{fmtSize(file.size)}{showPages && numPages ? ` · ${numPages} págs.` : ''}</p>
     </div>
   )
 }
@@ -46,7 +49,7 @@ export function ImageCard({ file, onRemove }: { file: File; onRemove: () => void
       </div>
       {big && url && <ImageLightbox src={url} name={file.name} onClose={() => setBig(false)} />}
       <p className="w-full truncate text-center text-xs font-medium" title={file.name}>{file.name}</p>
-      <p className="text-xs text-gray-500">{fmtSize(file.size)}</p>
+      <p className="text-xs text-ink/60">{fmtSize(file.size)}</p>
     </div>
   )
 }
