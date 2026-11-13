@@ -1,0 +1,21 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      JOBS: "3"
+    # la clave de DeepSeek se lee de .env (opcional: sin ella la IA queda desactivada)
+    env_file:
+      - path: .env
+        required: false
+    # los archivos temporales viven solo en memoria y se borran al terminar cada trabajo
+    tmpfs:
+      - /tmp:size=1g
+    # cuentas, planes y contadores de uso viven en este volumen: haz copia de seguridad
+    volumes:
+      - fp-data:/data
+    restart: unless-stopped
+
+volumes:
+  fp-data:

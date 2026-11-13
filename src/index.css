@@ -1,0 +1,90 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #5b4bff;
+  --color-brand-dark: #4636e8;
+  --color-ink: #16152b;
+  --color-paper: #f7f4ee;
+  --color-line: #e7e1d5;
+  --color-lime: #c6f26b;
+  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Inter Variable", system-ui, sans-serif;
+}
+
+body { @apply bg-paper font-sans text-ink antialiased; }
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+/* Foco visible y coherente con la marca */
+@layer base {
+  :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+}
+
+/* Papel con puntos: el fondo de las zonas de trabajo */
+.dots { background-image: radial-gradient(circle, rgb(22 21 43 / 0.09) 1px, transparent 1px); background-size: 18px 18px; }
+
+/* ── Taller: editor de documentos ─────────────────────────────────────── */
+.doc-editor .ProseMirror { outline: none; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.45; color: #111; min-height: 900px; }
+.doc-editor .ProseMirror > * + * { margin-top: 0.55em; }
+.doc-editor .ProseMirror h1 { font-size: 18pt; font-weight: 700; line-height: 1.25; margin-top: 0.9em; }
+.doc-editor .ProseMirror h2 { font-size: 15pt; font-weight: 700; line-height: 1.25; margin-top: 0.8em; }
+.doc-editor .ProseMirror h3 { font-size: 13pt; font-weight: 700; line-height: 1.3; margin-top: 0.7em; }
+.doc-editor .ProseMirror h4, .doc-editor .ProseMirror h5, .doc-editor .ProseMirror h6 { font-size: 11pt; font-weight: 700; }
+.doc-editor .ProseMirror ul { list-style: disc; padding-left: 1.6rem; }
+.doc-editor .ProseMirror ol { list-style: decimal; padding-left: 1.6rem; }
+.doc-editor .ProseMirror li > p { margin: 0; }
+.doc-editor .ProseMirror li + li { margin-top: 0.2em; }
+.doc-editor .ProseMirror blockquote { border-left: 3px solid #bbb; padding-left: 1rem; color: #444; font-style: italic; }
+.doc-editor .ProseMirror code { background: #f1f1f1; border-radius: 4px; padding: 0 0.25em; font-family: "Courier New", monospace; font-size: 0.92em; }
+.doc-editor .ProseMirror pre { background: #f4f4f4; border-radius: 6px; padding: 0.7em 1em; font-family: "Courier New", monospace; font-size: 10pt; overflow-x: auto; }
+.doc-editor .ProseMirror pre code { background: none; padding: 0; }
+.doc-editor .ProseMirror hr { border: 0; border-top: 1px solid #999; margin: 1em 0; }
+.doc-editor .ProseMirror a { color: #0563c1; text-decoration: underline; cursor: pointer; }
+.doc-editor .ProseMirror img { max-width: 100%; height: auto; display: inline-block; }
+.doc-editor .ProseMirror img.ProseMirror-selectednode { outline: 2px solid var(--color-brand); }
+.doc-editor .ProseMirror mark { border-radius: 2px; }
+.doc-editor .ProseMirror table { border-collapse: collapse; width: 100%; table-layout: fixed; margin: 0.8em 0; }
+.doc-editor .ProseMirror th, .doc-editor .ProseMirror td { border: 1px solid #b5b5b5; padding: 6px 8px; vertical-align: top; position: relative; min-width: 2em; }
+.doc-editor .ProseMirror th { background: #f2f2f2; font-weight: 700; text-align: left; }
+.doc-editor .ProseMirror td > p, .doc-editor .ProseMirror th > p { margin: 0; }
+.doc-editor .ProseMirror .selectedCell::after { content: ""; position: absolute; inset: 0; background: rgb(91 75 255 / 0.18); pointer-events: none; }
+.doc-editor .ProseMirror .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: 0; width: 4px; background: var(--color-brand); pointer-events: none; }
+.doc-editor .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #aaa; float: left; height: 0; pointer-events: none; }
+.doc-editor .tableWrapper { overflow-x: auto; }
+
+@media print {
+  header, footer, .no-print { display: none !important; }
+  body { background: #fff !important; }
+  .doc-paper { box-shadow: none !important; width: 100% !important; max-width: none !important; padding: 0 !important; min-height: 0 !important; margin: 0 !important; }
+  .doc-editor .ProseMirror { min-height: 0; }
+  @page { size: A4; margin: 2.5cm; }
+}
+
+/* Barra de desplazamiento fina y discreta */
+.thin-scroll { scrollbar-width: thin; scrollbar-color: rgb(22 21 43 / 0.28) transparent; }
+.thin-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+.thin-scroll::-webkit-scrollbar-thumb { background: rgb(22 21 43 / 0.25); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
+.thin-scroll::-webkit-scrollbar-thumb:hover { background: rgb(22 21 43 / 0.45); background-clip: content-box; }
+
+/* Código: tema claro, a juego con la hoja blanca */
+.doc-editor .ProseMirror pre { background: #f6f8fa; color: #24292f; border: 1px solid #e1e4e8; }
+.doc-editor .ProseMirror pre code { color: inherit; }
+.hljs-comment, .hljs-quote { color: #6e7781; font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag { color: #cf222e; }
+.hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute { color: #0a3069; }
+.hljs-number, .hljs-symbol, .hljs-bullet { color: #0550ae; }
+.hljs-title, .hljs-title.function_, .hljs-section { color: #8250df; }
+.hljs-built_in, .hljs-type, .hljs-class .hljs-title, .hljs-title.class_ { color: #953800; }
+.hljs-variable, .hljs-template-variable, .hljs-attr, .hljs-name, .hljs-tag { color: #116329; }
+.hljs-params, .hljs-meta { color: #24292f; }
+.hljs-deletion { color: #82071e; }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 700; }
+
+/* Pantallas táctiles: sin zoom automático al escribir (iOS exige 16px) y sin retraso al tocar */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']), select, textarea { font-size: 16px; }
+}
+button, a, [role='button'], select, summary { touch-action: manipulation; }

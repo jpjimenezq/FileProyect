@@ -1,0 +1,21 @@
+/** Marca: una hoja con la esquina doblada sobre un cuadrado violeta */
+export function LogoMark({ size = 32 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
+      <rect width="32" height="32" rx="9" fill="#5b4bff" />
+      <path d="M10 6.5h8.5L23 11v14.5H10z" fill="#fff" />
+      <path d="M18.5 6.5V11H23z" fill="#c6f26b" />
+      <rect x="12.5" y="15" width="7.5" height="1.8" rx=".9" fill="#5b4bff" opacity=".35" />
+      <rect x="12.5" y="19" width="5" height="1.8" rx=".9" fill="#5b4bff" opacity=".35" />
+    </svg>
+  )
+}
+
+export function Logo() {
+  return (
+    <span className="flex items-center gap-2 sm:gap-2.5">
+      <LogoMark />
+      <span className="font-display text-xl font-extrabold tracking-tight sm:text-[22px]">File<span className="text-brand">Proyect</span></span>
+    </span>
+  )
+}
