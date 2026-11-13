@@ -5,6 +5,13 @@ services:
       - "3001:3001"
     environment:
       JOBS: "3"
+      # Supabase (opcional): con URL y service role key el servidor usa Supabase en vez de SQLite.
+      # Se leen del entorno del anfitrión o de .env (sin valores aquí). Si Supabase corre en local con
+      # Docker, desde este contenedor se alcanza con SUPABASE_URL=http://host.docker.internal:54321
+      SUPABASE_URL:
+      SUPABASE_ANON_KEY:
+      SUPABASE_SERVICE_ROLE_KEY:
+      ADMIN_EMAILS:
     # la clave de DeepSeek se lee de .env (opcional: sin ella la IA queda desactivada)
     env_file:
       - path: .env

@@ -4,3 +4,5 @@ dist
 .claude
 .env
 server/data
+.env.local
+supabase

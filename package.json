@@ -10,7 +10,8 @@
     "test": "vitest run",
     "server": "node server/index.js",
     "dev:server": "node --watch server/index.js",
-    "test:server": "node --test server/tools.test.js server/ai.test.js server/app.test.js"
+    "test:server": "node --test server/tools.test.js server/ai.test.js server/app.test.js server/admin.test.js",
+    "admin:grant": "node server/admin-grant.js"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",

@@ -18,6 +18,7 @@ WORKDIR /app/server
 COPY server/package*.json ./
 RUN npm ci --omit=dev
 COPY server/*.js ./
+COPY server/store ./store
 COPY --from=web /app/dist /app/dist
 ENV NODE_ENV=production PORT=3001 DATA_DIR=/data
 RUN mkdir /data && chown node:node /data

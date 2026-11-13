@@ -1,8 +1,7 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { loadEnv } from './env.js'
 
-// .env en la raíz del proyecto (en Docker las variables llegan por docker compose)
-try { process.loadEnvFile(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env')) } catch { /* sin .env */ }
+// .env y .env.local en la raíz del proyecto (en Docker las variables llegan por docker compose)
+loadEnv()
 
 const { buildApp } = await import('./app.js')
 const { app } = await buildApp()

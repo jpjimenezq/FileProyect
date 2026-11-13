@@ -1,0 +1,2 @@
+-- Sin datos de arranque a propósito: no se guardan usuarios ni contraseñas en el repositorio.
+-- Crea tu cuenta desde la web y dale permisos con `npm run admin:grant -- tu@correo.com` (o ADMIN_EMAILS en .env).

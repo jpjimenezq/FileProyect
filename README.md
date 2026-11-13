@@ -26,6 +26,10 @@ Copia `.env.example` a `.env` y pon tu `DEEPSEEK_API_KEY`; reinicia el servidor.
 
 El servidor guarda usuarios y consumo en SQLite dentro de `DATA_DIR` (en Docker, el volumen `fp-data`; haz copia de seguridad). Para cobrar necesitas una cuenta de Stripe: crea dos precios recurrentes (mensual y anual, impuestos incluidos), rellena las variables `STRIPE_*` del `.env` y apunta un webhook a `PUBLIC_URL/api/billing/webhook` con los eventos `checkout.session.completed` y `customer.subscription.*`. Para probar Pro en local sin Stripe, arranca con `BILLING_DEV=1` y llama a `POST /api/billing/dev-upgrade` con tu sesión (**nunca en producción**). Las cuentas de márgenes están en [REQUISITOS.md](REQUISITOS.md).
 
+## Supabase y panel de administración
+
+Con `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en el entorno el servidor usa Supabase para identidad y datos de usuario (perfiles, uso, códigos de descuento, auditoría); sin ellas sigue con SQLite y cookies. En local: `npx supabase start` (la migración de `supabase/migrations/` se aplica sola; `npx supabase db reset` la reaplica), copia las claves de `npx supabase status -o env` a `.env.local` (ignorado por git; ver `.env.example`) y arranca el servidor. El acceso con Google queda declarado y desactivado en `supabase/config.toml`. El cliente envía `Authorization: Bearer <access_token>`; el inicio de sesión lo gestiona Supabase en el navegador (las rutas `/api/auth/*` responden 410). Para dar permisos de administrador: `ADMIN_EMAILS` o `npm run admin:grant -- correo@ejemplo.com` (el cambio tarda hasta 1 minuto por la caché de tokens). La API del panel vive bajo `/api/admin/*` (stats, users, discounts, audit); los códigos `percent`/`amount` se crean también en Stripe y los `grant` regalan Pro N días (`POST /api/billing/redeem`).
+
 ## Antes de publicar
 
 1. Rellena los datos del titular en `src/legal.config.ts` (las páginas legales muestran un aviso mientras falten) y haz que los revise un abogado.
