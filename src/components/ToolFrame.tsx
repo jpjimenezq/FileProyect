@@ -10,6 +10,7 @@ import { ApiError } from '../lib/api'
 import { peekHandoff } from '../lib/handoff'
 import { matchesAccept } from '../lib/files'
 import { categoryOf, toolById } from '../tools/catalog'
+import { useRangeFill } from './ui/useRangeFill'
 
 export interface Output {
   name: string
@@ -86,6 +87,8 @@ export function ToolFrame({ id, accept, multiple, children, emptyExtra, notice }
     if (first.current) { first.current = false; return }
     top.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [stage])
+
+  useRangeFill(top) // relleno de color en todos los deslizadores de la herramienta
 
   const ctx: FrameCtx = { files, setFiles, addFiles: (f) => setFiles((prev) => [...prev, ...f]), run, reset }
 
@@ -170,7 +173,7 @@ export function Workspace({ main, side, action }: { main: ReactNode; side?: Reac
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_21rem]">
       <div className="dots min-w-0 rounded-3xl border border-line bg-white p-4 md:p-6">{main}</div>
-      <aside className="flex h-fit flex-col gap-5 rounded-3xl border border-line bg-white p-5 shadow-sm lg:sticky lg:top-24">
+      <aside className="flex h-fit min-w-0 flex-col gap-5 rounded-3xl border border-line bg-white p-4 shadow-sm sm:p-5 lg:sticky lg:top-24">
         {side}
         <button
           onClick={action.onClick}
@@ -186,14 +189,15 @@ export function Workspace({ main, side, action }: { main: ReactNode; side?: Reac
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="flex flex-col gap-1.5 text-sm font-semibold">
+    <label className="flex min-w-0 flex-col gap-1.5 text-sm font-semibold">
       {label}
       {children}
     </label>
   )
 }
 
-export const inputCls = 'rounded-xl border border-line bg-paper px-3 py-2 font-normal focus:border-brand focus:bg-white focus:outline-none'
+/** Aspecto de campos de texto/selects: a juego con los estilos globales de index.css */
+export const inputCls = 'rounded-xl border border-line bg-paper px-3 py-2 font-normal transition hover:border-ink/30 focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/15'
 
 const MAX_ROWS = 12
 const MAX_COLS = 10

@@ -19,6 +19,119 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
 /* Foco visible y coherente con la marca */
 @layer base {
   :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+
+  /* ── Controles de formulario con la marca (las utilidades de Tailwind siempre pueden sobrescribirlos) ── */
+  select,
+  textarea,
+  input:is([type='text'], [type='number'], [type='email'], [type='password'], [type='url'], [type='search'], [type='tel'], [type='date'], [type='time']) {
+    border: 1px solid var(--color-line);
+    border-radius: 0.75rem;
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    padding: 0 0.75rem;
+    height: 2.5rem;
+    font: inherit;
+    font-size: 0.875rem;
+    transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+  }
+  textarea { height: auto; min-height: 5rem; padding: 0.55rem 0.75rem; line-height: 1.45; }
+  .latex-block textarea { border-width: 0; border-radius: 0; background-color: transparent; }
+  select:hover, textarea:hover, input:is([type='text'], [type='number'], [type='email'], [type='password'], [type='url'], [type='search'], [type='tel'], [type='date'], [type='time']):hover { border-color: rgb(22 21 43 / 0.28); }
+  select:focus, textarea:focus, input:is([type='text'], [type='number'], [type='email'], [type='password'], [type='url'], [type='search'], [type='tel'], [type='date'], [type='time']):focus {
+    border-color: var(--color-brand);
+    background-color: #fff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(91 75 255 / 0.18);
+  }
+  select:disabled, textarea:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
+  ::placeholder { color: rgb(22 21 43 / 0.38); }
+
+  /* Selector con flecha propia */
+  select:not([multiple]) {
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2316152b' stroke-opacity='.65' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 8 5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 1rem;
+  }
+  select[multiple] { height: auto; padding: 0.4rem; }
+
+  /* Número: sin las flechitas del navegador (los componentes NumberField llevan sus botones − / +) */
+  input[type='number'] { appearance: textfield; -moz-appearance: textfield; }
+  input[type='number']::-webkit-inner-spin-button, input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* Casillas y opciones: apariencia propia, redondeada y con check */
+  input[type='checkbox'], input[type='radio'] {
+    appearance: none;
+    flex-shrink: 0;
+    width: 1.125rem; height: 1.125rem;
+    border: 1.5px solid rgb(22 21 43 / 0.35);
+    background-color: #fff;
+    background-position: center; background-repeat: no-repeat; background-size: 100% 100%;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+  input[type='checkbox'] { border-radius: 0.35rem; }
+  input[type='radio'] { border-radius: 999px; }
+  input[type='checkbox']:hover, input[type='radio']:hover { border-color: var(--color-brand); }
+  input[type='checkbox']:checked, input[type='radio']:checked, input[type='checkbox']:indeterminate { background-color: var(--color-brand); border-color: var(--color-brand); }
+  input[type='checkbox']:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3.5 8.5 3 3 6-7'/%3E%3C/svg%3E"); }
+  input[type='checkbox']:indeterminate { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M4 8h8'/%3E%3C/svg%3E"); }
+  input[type='radio']:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='3' fill='white'/%3E%3C/svg%3E"); }
+  input[type='checkbox']:disabled, input[type='radio']:disabled { cursor: not-allowed; }
+
+  /* Deslizador: pista fina con relleno en la marca y pulgar circular (--p lo calcula Slider / useRangeFill) */
+  input[type='range'] {
+    appearance: none; -webkit-appearance: none;
+    width: 100%; height: 1.5rem; margin: 0; padding: 0;
+    background: transparent; cursor: pointer;
+    --p: 0%;
+  }
+  input[type='range']::-webkit-slider-runnable-track { height: 0.375rem; border-radius: 999px; background: linear-gradient(to right, var(--color-brand) var(--p), var(--color-line) var(--p)); }
+  input[type='range']::-moz-range-track { height: 0.375rem; border-radius: 999px; background: var(--color-line); }
+  input[type='range']::-moz-range-progress { height: 0.375rem; border-radius: 999px; background: var(--color-brand); }
+  input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 1.25rem; height: 1.25rem; margin-top: -0.4375rem; border-radius: 999px; background: #fff; border: 2px solid var(--color-brand); box-shadow: 0 1px 4px rgb(22 21 43 / 0.3); transition: transform 0.12s; }
+  input[type='range']::-moz-range-thumb { width: 1.05rem; height: 1.05rem; border-radius: 999px; background: #fff; border: 2px solid var(--color-brand); box-shadow: 0 1px 4px rgb(22 21 43 / 0.3); }
+  input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.1); }
+  input[type='range']:focus-visible { outline: none; }
+  input[type='range']:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgb(91 75 255 / 0.28), 0 1px 4px rgb(22 21 43 / 0.3); }
+  input[type='range']:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 4px rgb(91 75 255 / 0.28), 0 1px 4px rgb(22 21 43 / 0.3); }
+  input[type='range']:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* Color: solo la muestra redondeada, sin el marco gris del navegador */
+  input[type='color'] {
+    appearance: none; -webkit-appearance: none;
+    width: 2.75rem; height: 2.5rem; padding: 0.2rem;
+    border: 1px solid var(--color-line); border-radius: 0.75rem;
+    background: #fff; cursor: pointer;
+  }
+  input[type='color']::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type='color']::-webkit-color-swatch { border: 0; border-radius: 0.5rem; }
+  input[type='color']::-moz-color-swatch { border: 0; border-radius: 0.5rem; }
+
+  /* Archivo: botón con el estilo de la marca */
+  input[type='file'] { font-size: 0.875rem; color: rgb(22 21 43 / 0.7); max-width: 100%; }
+  input[type='file']::file-selector-button {
+    margin-right: 0.75rem; padding: 0.55rem 1rem; min-height: 2.5rem;
+    border: 0; border-radius: 0.75rem;
+    background: var(--color-ink); color: #fff;
+    font: inherit; font-weight: 600; cursor: pointer; transition: background-color 0.15s;
+  }
+  input[type='file']::file-selector-button:hover { background: var(--color-brand); }
+}
+
+/* Sin esto los utilitarios px-* dejarían la flecha encima del texto: el espacio de la flecha manda siempre */
+select:not([multiple]) { padding-right: 2rem; }
+
+/* Táctil: objetivos de al menos 40px y controles algo más grandes */
+@media (pointer: coarse) {
+  select, input:is([type='text'], [type='number'], [type='email'], [type='password'], [type='url'], [type='search'], [type='tel'], [type='date'], [type='time']) { min-height: 2.5rem; }
+  input[type='checkbox'], input[type='radio'] { width: 1.375rem; height: 1.375rem; }
+  input[type='range'] { height: 2.5rem; }
+  input[type='range']::-webkit-slider-thumb { width: 1.5rem; height: 1.5rem; margin-top: -0.5625rem; }
+  input[type='range']::-moz-range-thumb { width: 1.3rem; height: 1.3rem; }
 }
 
 /* Papel con puntos: el fondo de las zonas de trabajo */
