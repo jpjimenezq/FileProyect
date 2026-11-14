@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { PagePreview } from '../components/PagePreview'
 import { ImageLightbox, ZoomButton } from '../components/Lightbox'
-import { FileImage, FileText, FileType, Images, Maximize, RotateCw, ScanText, X } from 'lucide-react'
+import { ChevronDown, FileImage, FileText, FileType, Images, Maximize, RotateCw, ScanText, X } from 'lucide-react'
 import { AddMore } from '../components/Dropzone'
 import { Segmented } from '../components/Illustrate'
 import { SortableGrid } from '../components/SortableGrid'
-import { Field, ToolFrame, Workspace, inputCls } from '../components/ToolFrame'
+import { Select } from '../components/ui'
+import { Field, ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx, Output } from '../components/ToolFrame'
 import { baseName } from '../lib/files'
 import { pdfBlob } from '../lib/pdf/ops'
@@ -15,6 +16,8 @@ import type { OutFormat } from '../lib/doc/photos'
 
 const ACCEPT = 'image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.svg'
 type Kind = 'pdf' | 'word' | 'word-text' | 'txt' | 'images'
+
+const ACTION_LABEL: Record<Kind, string> = { pdf: 'Crear PDF', word: 'Crear Word', 'word-text': 'Crear Word editable', txt: 'Extraer texto', images: 'Convertir fotos' }
 
 function useObjectUrl(file: File) {
   const [url, setUrl] = useState<string>()
@@ -54,10 +57,12 @@ function PhotosWork({ files, setFiles, addFiles, run }: FrameCtx) {
   const [page, setPage] = useState<ImageOptions>({ orientation: 'auto', size: 'a4', margin: 20 })
   const [lang, setLang] = useState('spa')
   const [format, setFormat] = useState<OutFormat>('png')
+  const [pageOpen, setPageOpen] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches)
   const [turns, setTurns] = useState<Map<File, number>>(new Map())
   const setP = <K extends keyof ImageOptions>(k: K, v: ImageOptions[K]) => setPage((o) => ({ ...o, [k]: v }))
   const turn = (f: File) => setTurns((m) => new Map(m).set(f, ((m.get(f) ?? 0) + 90) % 360))
   const name = files.length === 1 ? baseName(files[0]) : 'fotos'
+  const pageSummary = `${{ a4: 'A4', letter: 'Carta', fit: 'Como la foto' }[page.size]}${page.size === 'fit' ? '' : ` · ${{ auto: 'Automática', portrait: 'Vertical', landscape: 'Horizontal' }[page.orientation]}`} · Margen ${{ 0: 'ninguno', 20: 'pequeño', 50: 'grande' }[page.margin] ?? page.margin}`
   const usesPage = kind === 'pdf' || kind === 'word'
   const usesOcr = kind === 'word-text' || kind === 'txt'
 
@@ -86,7 +91,7 @@ function PhotosWork({ files, setFiles, addFiles, run }: FrameCtx) {
       main={
         <>
           <div className="mb-4 flex items-center justify-between gap-3">
-            <p className="text-sm text-gray-600">Arrastra para ordenar las páginas. Gira cada foto si hace falta.</p>
+            <p className="text-sm text-ink/60">Arrastra para ordenar las páginas. Gira cada foto si hace falta.</p>
             <AddMore accept={ACCEPT} onFiles={addFiles} label="Añadir fotos" />
           </div>
           <SortableGrid
@@ -115,51 +120,65 @@ function PhotosWork({ files, setFiles, addFiles, run }: FrameCtx) {
             />
           </Field>
           {usesPage && (
-            <>
-              <Field label="Tamaño de página">
-                <Segmented<ImageOptions['size']>
-                  label="Tamaño de página"
-                  value={page.size}
-                  onChange={(v) => setP('size', v)}
-                  options={[
-                    { value: 'a4', label: 'A4', icon: FileText },
-                    { value: 'letter', label: 'Carta', icon: FileText },
-                    { value: 'fit', label: 'Como la foto', icon: Maximize, desc: 'Cada página tiene justo el tamaño de su foto.' },
-                  ]}
-                />
-              </Field>
-              {page.size !== 'fit' && (
-                <Field label="Orientación">
-                  <Segmented<ImageOptions['orientation']>
-                    label="Orientación"
-                    value={page.orientation}
-                    onChange={(v) => setP('orientation', v)}
-                    options={[{ value: 'auto', label: 'Automática' }, { value: 'portrait', label: 'Vertical' }, { value: 'landscape', label: 'Horizontal' }]}
-                  />
-                </Field>
+            <div className="rounded-2xl border border-line">
+              <button
+                type="button"
+                aria-expanded={pageOpen}
+                aria-controls="ajustes-pagina"
+                onClick={() => setPageOpen((o) => !o)}
+                className="flex min-h-11 w-full items-center justify-between gap-2 rounded-2xl px-3 py-2 text-left hover:bg-ink/5"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">Ajustes de página</span>
+                  {!pageOpen && <span className="block truncate text-xs text-ink/55">{pageSummary}</span>}
+                </span>
+                <ChevronDown size={18} className={`shrink-0 text-ink/60 transition ${pageOpen ? 'rotate-180' : ''}`} aria-hidden />
+              </button>
+              {pageOpen && (
+                <div id="ajustes-pagina" className="flex flex-col gap-4 border-t border-line p-3">
+                  <Field label="Tamaño de página">
+                    <Segmented<ImageOptions['size']>
+                      label="Tamaño de página"
+                      value={page.size}
+                      onChange={(v) => setP('size', v)}
+                      options={[
+                        { value: 'a4', label: 'A4', icon: FileText },
+                        { value: 'letter', label: 'Carta', icon: FileText },
+                        { value: 'fit', label: 'Como la foto', icon: Maximize, desc: 'Cada página tiene justo el tamaño de su foto.' },
+                      ]}
+                    />
+                  </Field>
+                  {page.size !== 'fit' && (
+                    <Field label="Orientación">
+                      <Segmented<ImageOptions['orientation']>
+                        label="Orientación"
+                        value={page.orientation}
+                        onChange={(v) => setP('orientation', v)}
+                        options={[{ value: 'auto', label: 'Automática' }, { value: 'portrait', label: 'Vertical' }, { value: 'landscape', label: 'Horizontal' }]}
+                      />
+                    </Field>
+                  )}
+                  <Field label="Margen">
+                    <Segmented<number> label="Margen" value={page.margin} onChange={(v) => setP('margin', v)} options={[{ value: 0, label: 'Ninguno' }, { value: 20, label: 'Pequeño' }, { value: 50, label: 'Grande' }]} />
+                  </Field>
+                </div>
               )}
-              <Field label="Margen">
-                <Segmented<number> label="Margen" value={page.margin} onChange={(v) => setP('margin', v)} options={[{ value: 0, label: 'Ninguno' }, { value: 20, label: 'Pequeño' }, { value: 50, label: 'Grande' }]} />
-              </Field>
-            </>
+            </div>
           )}
           {usesOcr && (
-            <Field label="Idioma del texto">
-              <select className={inputCls} value={lang} onChange={(e) => setLang(e.target.value)}>
-                <option value="spa">Español</option><option value="eng">Inglés</option><option value="fra">Francés</option><option value="deu">Alemán</option>
-                <option value="por">Portugués</option><option value="ita">Italiano</option><option value="spa+eng">Español + Inglés</option>
-              </select>
-            </Field>
+            <Select label="Idioma del texto" hint="La primera vez se descarga el idioma (necesitas conexión)." value={lang} onChange={(e) => setLang(e.target.value)}>
+              <option value="spa">Español</option><option value="eng">Inglés</option><option value="fra">Francés</option><option value="deu">Alemán</option>
+              <option value="por">Portugués</option><option value="ita">Italiano</option><option value="spa+eng">Español + Inglés</option>
+            </Select>
           )}
           {kind === 'images' && (
             <Field label="Formato">
               <Segmented<OutFormat> label="Formato" value={format} onChange={setFormat} options={[{ value: 'png', label: 'PNG', icon: FileImage }, { value: 'jpg', label: 'JPG', icon: FileImage }, { value: 'webp', label: 'WebP', icon: FileImage }]} />
             </Field>
           )}
-          {usesOcr && <p className="text-xs text-gray-500">La primera vez se descargan los datos del idioma (necesitas conexión). Puede tardar unos segundos por foto.</p>}
         </>
       }
-      action={{ label: 'Crear', disabled: !files.length, onClick: start }}
+      action={{ label: ACTION_LABEL[kind], disabled: !files.length, onClick: start }}
     />
   )
 }

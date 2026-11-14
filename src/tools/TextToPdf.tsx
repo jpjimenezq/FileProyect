@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FileCode2, Pencil, Type } from 'lucide-react'
 import { Segmented } from '../components/Illustrate'
+import { Button, Slider } from '../components/ui'
 import { Field, ToolFrame, Workspace, inputCls } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
 import { baseName } from '../lib/files'
@@ -54,10 +55,10 @@ function TextWork({ files, run, reset }: FrameCtx) {
               ]}
             />
           </Field>
-          <Field label={`Tamaño de letra: ${size} pt`}>
-            <input type="range" min={8} max={18} value={size} onChange={(e) => setSize(Number(e.target.value))} />
-          </Field>
-          <p className="text-xs text-ink/55">Solo se admiten letras del alfabeto latino (con tildes y ñ). Otros alfabetos se sustituyen por «?».</p>
+          <div className="flex flex-col gap-1.5">
+            <Slider label="Tamaño de letra" value={size} onChange={setSize} min={8} max={18} unit="pt" />
+            <p className="text-xs text-ink/55">Solo alfabeto latino (tildes y ñ); otros signos salen como «?».</p>
+          </div>
         </>
       }
       action={{
@@ -73,9 +74,9 @@ function TextWork({ files, run, reset }: FrameCtx) {
 function WriteButton({ ctx }: { ctx: FrameCtx }) {
   return (
     <div className="mt-6 flex justify-center">
-      <button onClick={() => ctx.setFiles([new File([''], 'texto.txt', { type: 'text/plain' })])} className="flex items-center gap-2 rounded-xl border-2 border-brand px-6 py-3 font-semibold text-brand hover:bg-brand/10">
-        <Pencil size={18} /> Escribir o pegar texto
-      </button>
+      <Button variant="secondary" icon={Pencil} onClick={() => ctx.setFiles([new File([''], 'texto.txt', { type: 'text/plain' })])} className="border-2 border-brand px-6 py-3 text-base text-brand hover:bg-brand/10">
+        Escribir o pegar texto
+      </Button>
     </div>
   )
 }

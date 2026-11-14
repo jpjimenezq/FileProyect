@@ -22,7 +22,7 @@ export function JpgWork({ files, setFiles, addFiles, run, outName = 'imagenes.pd
       main={
         <>
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-gray-600">Arrastra las imágenes para cambiar el orden.</p>
+            <p className="text-sm text-ink/60">Arrastra las imágenes para cambiar el orden.</p>
             <AddMore accept={IMAGE_ACCEPT} onFiles={addFiles} label="Añadir imágenes" />
           </div>
           <SortableGrid
