@@ -50,6 +50,7 @@ export const implemented: Record<string, ComponentType> = {
   'remove-annots': lazy(() => import('./RemoveAnnotations')),
   summarize: lazy(() => import('./Summarize')),
   translate: lazy(() => import('./Translate')),
+  'header-footer': lazy(() => import('./HeaderFooter')),
   ...Object.fromEntries(
     ['compress', 'repair', 'pdf-to-pdfa', 'word-to-pdf', 'ppt-to-pdf', 'excel-to-pdf', 'html-to-pdf', 'pdf-to-word', 'pdf-to-ppt', 'protect', 'unlock'].map((id) => [id, server(id)]),
   ),

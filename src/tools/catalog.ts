@@ -1,7 +1,7 @@
 import {
   ArrowDownUp, Columns2, Crop, EyeOff, FileCode2, FileImage, FileOutput, FileText, Globe, Hash, Image, Languages,
   LockOpen, Merge, Minimize2, PenLine, Pencil, Presentation, RotateCw, ScanLine, ScanText, Sheet, ShieldCheck, Sparkles,
-  Split, Stamp, TextCursorInput, Trash2, Wrench, FileCheck2, FileMinus, FileType, Images, Layers, MessageSquareOff, Tags, LayoutGrid, Scaling, BadgeCheck, Contrast, Scan, AlignLeft, StretchVertical, Paperclip, Bookmark, SunMedium, ImageUp, Eraser, FilePlus2, Shuffle, SplitSquareHorizontal,
+  Split, Stamp, TextCursorInput, Trash2, Wrench, FileCheck2, FileMinus, FileType, Images, Layers, MessageSquareOff, Tags, LayoutGrid, Scaling, BadgeCheck, Contrast, Scan, AlignLeft, StretchVertical, Paperclip, Bookmark, SunMedium, ImageUp, Eraser, FilePlus2, Shuffle, SplitSquareHorizontal, PanelTop,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -89,6 +89,7 @@ export const tools: ToolDef[] = [
   t('crop', 'recortar-pdf', 'Recortar PDF', 'Recorta los márgenes de tus páginas.', 'editar', Crop, 1),
   t('edit', 'editar-pdf', 'Editar PDF', 'Añade texto, formas, imágenes y dibujos al PDF.', 'editar', Pencil, 1),
   t('forms', 'formularios-pdf', 'Formularios PDF', 'Rellena los campos de formularios PDF y guárdalos.', 'editar', TextCursorInput, 1),
+  t('header-footer', 'encabezado-y-pie', 'Encabezado y pie de página', 'Añade texto arriba y abajo de cada página: título, fecha, número y más.', 'editar', PanelTop, 1),
 
   t('unlock', 'desbloquear-pdf', 'Desbloquear PDF', 'Quita la contraseña y las restricciones del PDF.', 'seguridad', LockOpen, 1),
   t('protect', 'proteger-pdf', 'Proteger PDF', 'Cifra tu PDF con una contraseña.', 'seguridad', ShieldCheck, 1),
