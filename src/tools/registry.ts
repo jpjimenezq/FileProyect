@@ -15,6 +15,7 @@ export const implemented: Record<string, ComponentType> = {
   rotate: lazy(() => import('./Rotate')),
   'insert-pages': lazy(() => import('./InsertPages')),
   interleave: lazy(() => import('./Interleave')),
+  'split-halves': lazy(() => import('./SplitHalves')),
   'jpg-to-pdf': lazy(() => import('./JpgToPdf')),
   'photos-to-doc': lazy(() => import('./PhotosToDoc')),
   'pdf-to-jpg': lazy(() => import('./PdfToJpg')),

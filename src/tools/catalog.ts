@@ -1,7 +1,7 @@
 import {
   ArrowDownUp, Columns2, Crop, EyeOff, FileCode2, FileImage, FileOutput, FileText, Globe, Hash, Image, Languages,
   LockOpen, Merge, Minimize2, PenLine, Pencil, Presentation, RotateCw, ScanLine, ScanText, Sheet, ShieldCheck, Sparkles,
-  Split, Stamp, TextCursorInput, Trash2, Wrench, FileCheck2, FileMinus, FileType, Images, Layers, MessageSquareOff, Tags, LayoutGrid, Scaling, BadgeCheck, Contrast, Scan, AlignLeft, StretchVertical, Paperclip, Bookmark, SunMedium, ImageUp, Eraser, FilePlus2, Shuffle,
+  Split, Stamp, TextCursorInput, Trash2, Wrench, FileCheck2, FileMinus, FileType, Images, Layers, MessageSquareOff, Tags, LayoutGrid, Scaling, BadgeCheck, Contrast, Scan, AlignLeft, StretchVertical, Paperclip, Bookmark, SunMedium, ImageUp, Eraser, FilePlus2, Shuffle, SplitSquareHorizontal,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -50,6 +50,7 @@ export const tools: ToolDef[] = [
   t('scan', 'escanear-a-pdf', 'Escanea a PDF', 'Escanea documentos con la cámara y guárdalos como PDF.', 'ordenar', ScanLine, 1),
   t('insert-pages', 'insertar-paginas', 'Insertar páginas', 'Mete páginas en blanco u otro PDF en la posición que elijas.', 'ordenar', FilePlus2, 1),
   t('interleave', 'intercalar-paginas', 'Intercalar páginas', 'Mezcla dos PDF página a página, por ejemplo anversos y reversos escaneados.', 'ordenar', Shuffle, 1),
+  t('split-halves', 'dividir-paginas-por-la-mitad', 'Dividir páginas por la mitad', 'Corta cada página en dos: libros escaneados a doble página o A3 a A4.', 'ordenar', SplitSquareHorizontal, 1),
 
   t('compress', 'comprimir-pdf', 'Comprimir PDF', 'Reduce el tamaño del archivo manteniendo la calidad.', 'optimizar', Minimize2, 1),
   t('repair', 'reparar-pdf', 'Reparar PDF', 'Recupera datos de PDF dañados.', 'optimizar', Wrench, 1),

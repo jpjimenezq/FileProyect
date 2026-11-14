@@ -103,3 +103,95 @@ export async function insertPages(main: PdfSource, specs: InsertSpec[], onProgre
   }
   return out.save()
 }
+
+/* ───────────── Dividir páginas por la mitad ───────────── */
+
+export type SplitMode = 'vertical' | 'horizontal' | 'auto'
+/** Corte que se hace sobre lo que se ve: vertical = mitades izquierda y derecha; horizontal = arriba y abajo */
+export type SplitCut = 'vertical' | 'horizontal'
+export type Box = { x: number; y: number; width: number; height: number }
+export type SplitSide = 'left' | 'right' | 'top' | 'bottom'
+
+/** Tamaño tal y como se ve la página (con el giro aplicado) */
+export function visualSize(width: number, height: number, rotation: number) {
+  return Math.abs(Math.round(rotation / 90)) % 2 === 1 ? { width: height, height: width } : { width, height }
+}
+
+/** Corte real: en «auto», las páginas apaisadas se cortan en vertical y las verticales en horizontal */
+export function resolveCut(mode: SplitMode, width: number, height: number, rotation = 0): SplitCut {
+  if (mode !== 'auto') return mode
+  const v = visualSize(width, height, rotation)
+  return v.width > v.height ? 'vertical' : 'horizontal'
+}
+
+const norm = (rotation: number) => ((Math.round(rotation / 90) * 90) % 360 + 360) % 360
+
+/** Lado de la página SIN girar que corresponde a cada lado visible, según el giro /Rotate (horario) */
+const SIDE_MAP: Record<number, Record<SplitSide, SplitSide>> = {
+  0: { left: 'left', right: 'right', top: 'top', bottom: 'bottom' },
+  90: { left: 'bottom', right: 'top', top: 'left', bottom: 'right' },
+  180: { left: 'right', right: 'left', top: 'bottom', bottom: 'top' },
+  270: { left: 'top', right: 'bottom', top: 'right', bottom: 'left' },
+}
+
+/** Mitad de una caja (sin girar; origen abajo a la izquierda como en PDF) */
+function halfOf(b: Box, side: SplitSide): Box {
+  const hw = b.width / 2
+  const hh = b.height / 2
+  switch (side) {
+    case 'left': return { x: b.x, y: b.y, width: hw, height: b.height }
+    case 'right': return { x: b.x + hw, y: b.y, width: hw, height: b.height }
+    case 'bottom': return { x: b.x, y: b.y, width: b.width, height: hh }
+    case 'top': return { x: b.x, y: b.y + hh, width: b.width, height: hh }
+  }
+}
+
+/**
+ * Cajas (MediaBox/CropBox) de las dos mitades, en orden de lectura. Respeta el giro de la página y que la caja
+ * no empiece en 0,0. Con `rtl` (derecha a izquierda) se leen primero la mitad derecha. En cortes horizontales
+ * el orden siempre es arriba → abajo.
+ */
+export function splitBoxes(box: Box, rotation: number, mode: SplitMode, rtl = false): [Box, Box] {
+  const cut = resolveCut(mode, box.width, box.height, rotation)
+  const map = SIDE_MAP[norm(rotation)]
+  const [a, b]: [SplitSide, SplitSide] = cut === 'vertical' ? (rtl ? ['right', 'left'] : ['left', 'right']) : ['top', 'bottom']
+  return [halfOf(box, map[a]), halfOf(box, map[b])]
+}
+
+/** Qué páginas se dividen: con `skipEnds`, ni la primera ni la última (portadas). Un PDF de 1 o 2 páginas no se divide así. */
+export function splitPlan(total: number, skipEnds: boolean) {
+  return Array.from({ length: total }, (_, i) => ({ page: i + 1, split: !skipEnds || (i > 0 && i < total - 1) }))
+}
+
+/** Páginas que tendrá el resultado */
+export function splitPageCount(total: number, skipEnds: boolean) {
+  return splitPlan(total, skipEnds).reduce((n, p) => n + (p.split ? 2 : 1), 0)
+}
+
+export type SplitOptions = { mode: SplitMode; rtl?: boolean; skipEnds?: boolean }
+
+/** Corta cada página en dos copias, ajustando MediaBox y CropBox a su mitad */
+export async function splitPagesInHalf(src: PdfSource, opts: SplitOptions, onProgress?: (fraction: number) => void) {
+  const doc = await load(src)
+  const out = await PDFDocument.create()
+  const plan = splitPlan(doc.getPageCount(), !!opts.skipEnds)
+  for (const [i, item] of plan.entries()) {
+    const orig = doc.getPage(item.page - 1)
+    if (!item.split) {
+      const [page] = await out.copyPages(doc, [item.page - 1])
+      out.addPage(page)
+    } else {
+      const m = orig.getCropBox()
+      const boxes = splitBoxes({ x: m.x, y: m.y, width: m.width, height: m.height }, orig.getRotation().angle, opts.mode, opts.rtl)
+      for (const b of boxes) {
+        // una copia por mitad: así cada una tiene su propio diccionario de página
+        const [page] = await out.copyPages(doc, [item.page - 1])
+        out.addPage(page)
+        page.setMediaBox(b.x, b.y, b.width, b.height)
+        page.setCropBox(b.x, b.y, b.width, b.height)
+      }
+    }
+    onProgress?.((i + 1) / plan.length)
+  }
+  return out.save()
+}

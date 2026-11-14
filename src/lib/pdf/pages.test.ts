@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PDFDocument, degrees } from 'pdf-lib'
-import { insertionPlan, insertPages, interleaveOrder, interleavePdfs, neighborPage } from './pages'
+import { insertionPlan, insertPages, interleaveOrder, interleavePdfs, neighborPage, splitBoxes, splitPageCount, splitPagesInHalf, splitPlan } from './pages'
 
 /** PDF cuyas páginas miden 100+n de ancho (n = número de página), para reconocerlas luego */
 async function makePdf(pages: number, base = 100) {
@@ -74,5 +74,82 @@ describe('insertPages', () => {
     const other = await makePdf(2, 500) // 501, 502
     const bytes = await insertPages(main, [{ id: 'o', at: 1, file: other }, { id: 'b', at: 2, blank: true }])
     expect(await widths(bytes)).toEqual([101, 501, 502, 102, 102])
+  })
+})
+
+describe('dividir páginas por la mitad', () => {
+  const A3 = { x: 0, y: 0, width: 1191, height: 842 }
+
+  it('splitBoxes: A3 apaisada en vertical da dos A4 (izquierda, derecha)', () => {
+    const [l, r] = splitBoxes(A3, 0, 'auto')
+    expect(l).toEqual({ x: 0, y: 0, width: 595.5, height: 842 })
+    expect(r).toEqual({ x: 595.5, y: 0, width: 595.5, height: 842 })
+  })
+  it('auto en una página vertical corta en horizontal (arriba, abajo)', () => {
+    const [t, b] = splitBoxes({ x: 0, y: 0, width: 600, height: 800 }, 0, 'auto')
+    expect(t).toEqual({ x: 0, y: 400, width: 600, height: 400 })
+    expect(b).toEqual({ x: 0, y: 0, width: 600, height: 400 })
+  })
+  it('orden de derecha a izquierda empieza por la mitad derecha', () => {
+    const [first, second] = splitBoxes(A3, 0, 'vertical', true)
+    expect(first.x).toBe(595.5)
+    expect(second.x).toBe(0)
+  })
+  it('respeta una caja que no empieza en 0,0', () => {
+    const [l, r] = splitBoxes({ x: 20, y: 30, width: 200, height: 100 }, 0, 'vertical')
+    expect(l).toEqual({ x: 20, y: 30, width: 100, height: 100 })
+    expect(r).toEqual({ x: 120, y: 30, width: 100, height: 100 })
+  })
+  it('con Rotate 90 la página apaisada visible se corta en el eje contrario del PDF', () => {
+    // sin girar es vertical (600x800); girada 90 se ve apaisada (800x600) → «auto» corta en vertical visible
+    const [left, right] = splitBoxes({ x: 0, y: 0, width: 600, height: 800 }, 90, 'auto')
+    // la mitad izquierda visible es la parte baja de la página sin girar
+    expect(left).toEqual({ x: 0, y: 0, width: 600, height: 400 })
+    expect(right).toEqual({ x: 0, y: 400, width: 600, height: 400 })
+  })
+  it('con Rotate 270 se invierte respecto a 90', () => {
+    const [left] = splitBoxes({ x: 0, y: 0, width: 600, height: 800 }, 270, 'vertical')
+    expect(left).toEqual({ x: 0, y: 400, width: 600, height: 400 })
+  })
+  it('splitPlan excluye primera y última', () => {
+    expect(splitPlan(4, true).map((p) => p.split)).toEqual([false, true, true, false])
+    expect(splitPlan(2, true).map((p) => p.split)).toEqual([false, false])
+    expect(splitPageCount(4, true)).toBe(6)
+    expect(splitPageCount(4, false)).toBe(8)
+  })
+
+  async function a3(rotation = 0) {
+    const doc = await PDFDocument.create()
+    for (let i = 0; i < 2; i++) {
+      const p = doc.addPage([1191, 842])
+      if (rotation) p.setRotation(degrees(rotation))
+    }
+    return new File([(await doc.save()) as BlobPart], 'a3.pdf')
+  }
+
+  it('2 páginas A3 apaisadas dan 4 páginas A4', async () => {
+    const out = await PDFDocument.load(await splitPagesInHalf(await a3(), { mode: 'auto' }))
+    expect(out.getPageCount()).toBe(4)
+    for (const p of out.getPages()) {
+      expect(p.getMediaBox().width).toBeCloseTo(595.5)
+      expect(p.getMediaBox().height).toBe(842)
+      expect(p.getCropBox().x).toBe(p.getMediaBox().x)
+    }
+    expect(out.getPages().map((p) => p.getMediaBox().x)).toEqual([0, 595.5, 0, 595.5])
+  })
+  it('derecha a izquierda y sin dividir primera/última', async () => {
+    const rtl = await PDFDocument.load(await splitPagesInHalf(await a3(), { mode: 'vertical', rtl: true }))
+    expect(rtl.getPages().map((p) => p.getMediaBox().x)).toEqual([595.5, 0, 595.5, 0])
+    const skip = await PDFDocument.load(await splitPagesInHalf(await a3(), { mode: 'vertical', skipEnds: true }))
+    expect(skip.getPageCount()).toBe(2)
+    expect(skip.getPage(0).getMediaBox().width).toBe(1191)
+  })
+  it('una página con Rotate 90 conserva el giro en las dos mitades', async () => {
+    const out = await PDFDocument.load(await splitPagesInHalf(await a3(90), { mode: 'vertical' }))
+    expect(out.getPageCount()).toBe(4)
+    expect(out.getPage(0).getRotation().angle).toBe(90)
+    // visible: 842 x 1191 (vertical) → mitades izquierda/derecha = abajo/arriba de la caja 1191x842
+    expect(out.getPage(0).getMediaBox()).toMatchObject({ x: 0, y: 0, width: 1191, height: 421 })
+    expect(out.getPage(1).getMediaBox()).toMatchObject({ x: 0, y: 421, width: 1191, height: 421 })
   })
 })
