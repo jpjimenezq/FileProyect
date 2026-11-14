@@ -1,7 +1,7 @@
 import {
   ArrowDownUp, Columns2, Crop, EyeOff, FileCode2, FileImage, FileOutput, FileText, Globe, Hash, Image, Languages,
   LockOpen, Merge, Minimize2, PenLine, Pencil, Presentation, RotateCw, ScanLine, ScanText, Sheet, ShieldCheck, Sparkles,
-  Split, Stamp, TextCursorInput, Trash2, Wrench, FileCheck2, FileMinus, FileType, Images, Layers, MessageSquareOff, Tags, LayoutGrid, Scaling, BadgeCheck, Contrast, Scan, AlignLeft, StretchVertical, Paperclip, Bookmark, SunMedium, ImageUp, Eraser,
+  Split, Stamp, TextCursorInput, Trash2, Wrench, FileCheck2, FileMinus, FileType, Images, Layers, MessageSquareOff, Tags, LayoutGrid, Scaling, BadgeCheck, Contrast, Scan, AlignLeft, StretchVertical, Paperclip, Bookmark, SunMedium, ImageUp, Eraser, FilePlus2, Shuffle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -48,6 +48,8 @@ export const tools: ToolDef[] = [
   t('single-page', 'pdf-a-una-pagina', 'PDF a una sola página', 'Une todas las páginas en una sola página larga.', 'ordenar', StretchVertical, 1),
   t('remove-blanks', 'quitar-paginas-en-blanco', 'Quitar páginas en blanco', 'Detecta y elimina las hojas vacías de tu PDF.', 'ordenar', FileMinus, 1),
   t('scan', 'escanear-a-pdf', 'Escanea a PDF', 'Escanea documentos con la cámara y guárdalos como PDF.', 'ordenar', ScanLine, 1),
+  t('insert-pages', 'insertar-paginas', 'Insertar páginas', 'Mete páginas en blanco u otro PDF en la posición que elijas.', 'ordenar', FilePlus2, 1),
+  t('interleave', 'intercalar-paginas', 'Intercalar páginas', 'Mezcla dos PDF página a página, por ejemplo anversos y reversos escaneados.', 'ordenar', Shuffle, 1),
 
   t('compress', 'comprimir-pdf', 'Comprimir PDF', 'Reduce el tamaño del archivo manteniendo la calidad.', 'optimizar', Minimize2, 1),
   t('repair', 'reparar-pdf', 'Reparar PDF', 'Recupera datos de PDF dañados.', 'optimizar', Wrench, 1),
