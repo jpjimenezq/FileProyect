@@ -8,7 +8,6 @@ const cards = [
   {
     to: '/taller/documento',
     icon: FileText,
-    color: '#2563eb',
     title: 'Documento',
     text: 'Escribe y da formato como en Word: tipos de letra, tamaños, colores, alineación, listas, tablas e imágenes.',
     chips: ['Abre y guarda .docx', 'Exporta a PDF', 'Se guarda solo'],
@@ -17,7 +16,6 @@ const cards = [
   {
     to: '/taller/hoja',
     icon: Table2,
-    color: '#16a34a',
     title: 'Hoja de cálculo',
     text: 'Tablas con fórmulas como en Excel: sumas, promedios, condicionales, varias hojas, colores y formatos de número.',
     chips: ['Abre y guarda .xlsx', 'Importa y exporta .csv', 'Fórmulas en vivo'],
@@ -111,9 +109,9 @@ export function Taller() {
       )}
 
       <div className="mt-10 grid gap-5 md:grid-cols-2">
-        {cards.map(({ to, icon: Icon, color, title, text, chips, tools }) => (
-          <div key={to} className="flex flex-col rounded-3xl border border-line bg-white p-7">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl text-white" style={{ background: color }}><Icon size={28} /></span>
+        {cards.map(({ to, icon: Icon, title, text, chips, tools }) => (
+          <div key={to} className="flex flex-col rounded-3xl border border-line bg-white p-6 sm:p-7">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ink text-white"><Icon size={28} /></span>
             <h2 className="mt-5 text-2xl font-bold">{title}</h2>
             <p className="mt-2 flex-1 text-ink/65">{text}</p>
             <ul className="mt-4 flex flex-wrap gap-2">

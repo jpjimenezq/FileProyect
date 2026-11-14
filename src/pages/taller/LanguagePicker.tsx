@@ -21,7 +21,7 @@ export function LanguagePicker({ value, onPick }: { value: string; onPick: (id: 
   return (
     <div ref={box} className="relative">
       <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-label="Lenguaje del código" onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen((o) => !o)}
-        className="flex h-8 items-center gap-1.5 rounded-full bg-ink pl-3 pr-2 text-sm font-semibold text-white hover:bg-brand">
+        className="flex h-8 items-center gap-1.5 pointer-coarse:h-10 rounded-full bg-ink pl-3 pr-2 text-sm font-semibold text-white hover:bg-brand">
         {current}<ChevronDown size={14} />
       </button>
       {open && (

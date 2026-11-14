@@ -27,7 +27,7 @@ export function FontPicker({ value, onPick }: { value: string; onPick: (font: st
   return (
     <div ref={box} className="relative">
       <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-label="Tipo de letra" onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen((o) => !o)}
-        className="flex h-8 w-44 items-center justify-between gap-1 rounded-lg border border-line bg-white px-2.5 text-sm hover:border-brand">
+        className="flex h-8 w-44 items-center pointer-coarse:h-10 justify-between gap-1 rounded-lg border border-line bg-white px-2.5 text-sm hover:border-brand">
         <span className="truncate" style={{ fontFamily: value || 'Arial' }}>{value || 'Arial'}</span>
         <ChevronDown size={14} className="shrink-0 text-ink/50" />
       </button>

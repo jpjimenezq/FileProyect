@@ -20,6 +20,7 @@ import { LatexBlock } from '../../lib/doc/latex'
 import '../../lib/doc/loadFonts'
 import { FontPicker } from './FontPicker'
 import { LanguagePicker } from './LanguagePicker'
+import { ColorPopover, MiniSelect } from './TallerControls'
 import { exportDocx } from '../../lib/doc/docxExport'
 import type { PMNode } from '../../lib/doc/docxExport'
 import { importDocx } from '../../lib/doc/docxImport'
@@ -28,6 +29,9 @@ import { peekHandoff } from '../../lib/handoff'
 
 const SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72]
 const STORAGE = 'fp_doc_draft'
+const HIGHLIGHTS = ['#ffeb3b', '#c6f26b', '#a5f3fc', '#fbcfe8', '#fed7aa', '#e7e1d5'] as const
+const STYLES = [{ value: 0, label: 'Párrafo' }, { value: 1, label: 'Título 1' }, { value: 2, label: 'Título 2' }, { value: 3, label: 'Título 3' }]
+const SIZE_OPTIONS = SIZES.map((n) => ({ value: n, label: String(n) }))
 
 const toPx = (pt: number) => `${Math.round((pt * 4) / 3 * 10) / 10}px`
 const fromPx = (px?: string) => (px ? Math.round((parseFloat(px) * 3) / 4) : undefined)
@@ -69,6 +73,7 @@ export default function DocEditor() {
   const [tab, setTab] = useState<'texto' | 'parrafo' | 'insertar'>('texto')
   const [linkOpen, setLinkOpen] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
+  const [hl, setHl] = useState<string>(HIGHLIGHTS[0])
   const [busy, setBusy] = useState<string>()
   const [error, setError] = useState<string>()
   const openInput = useRef<HTMLInputElement>(null)
@@ -221,8 +226,10 @@ export default function DocEditor() {
         <div className="mx-auto max-w-5xl px-3 py-2">
           <div className="mb-2 flex flex-wrap items-center gap-3">
             <Link to="/taller" className="text-sm text-ink/55 hover:text-brand">← Taller</Link>
-            <input aria-label="Nombre del documento" value={title} onChange={(e) => { setTitle(e.target.value); persist(editor.getJSON(), e.target.value) }} className="order-last min-w-0 basis-full rounded-lg bg-transparent px-2 py-1 font-display sm:order-none sm:basis-0 sm:flex-1 text-lg font-bold hover:bg-ink/5 focus:bg-ink/5 focus:outline-none" />
-            <span className="hidden text-xs text-ink/45 md:inline">{saved === 'saving' ? 'Guardando…' : 'Guardado en este navegador'}</span>
+            <div className="order-last flex min-w-0 basis-full flex-col sm:order-none sm:basis-0 sm:flex-1 sm:flex-row sm:items-center sm:gap-3">
+              <input aria-label="Nombre del documento" value={title} onChange={(e) => { setTitle(e.target.value); persist(editor.getJSON(), e.target.value) }} className="min-w-0 rounded-lg bg-transparent px-2 py-1 font-display text-lg font-bold hover:bg-ink/5 focus:bg-ink/5 focus:outline-none sm:flex-1" />
+              <span role="status" className="shrink-0 px-2 text-xs text-ink/45">{saved === 'saving' ? 'Guardando…' : 'Guardado en este navegador'}</span>
+            </div>
             <input ref={openInput} type="file" hidden accept=".docx,.html,.htm,.txt,.md" onChange={(e) => { void open(e.target.files?.[0]); e.target.value = '' }} />
             <Btn title="Documento nuevo" onClick={reset}><FilePlus2 size={17} /></Btn>
             <Btn title="Abrir un archivo (.docx, .html, .txt)" onClick={() => openInput.current?.click()}><FolderOpen size={17} /></Btn>
@@ -256,27 +263,18 @@ export default function DocEditor() {
             </div>
             <Sep />
             <div className={group('texto')}>
-            <select aria-label="Estilo del párrafo" value={st.heading} onChange={(e) => { const l = Number(e.target.value); if (l) chain().setHeading({ level: l as 1 | 2 | 3 }).run(); else chain().setParagraph().run() }} className="h-8 rounded-lg border border-line bg-white px-2 text-sm">
-              <option value={0}>Párrafo</option><option value={1}>Título 1</option><option value={2}>Título 2</option><option value={3}>Título 3</option>
-            </select>
+            <MiniSelect label="Estilo del párrafo" className="w-28" value={st.heading} options={STYLES} onChange={(l) => { if (l) chain().setHeading({ level: l as 1 | 2 | 3 }).run(); else chain().setParagraph().run() }} />
             <FontPicker value={st.font} onPick={(f) => chain().setFontFamily(f).run()} />
-            <select aria-label="Tamaño de letra" value={st.size ?? ''} onChange={(e) => (e.target.value ? chain().setFontSize(toPx(Number(e.target.value))).run() : chain().unsetFontSize().run())} className="h-8 w-[4.5rem] rounded-lg border border-line bg-white px-2 text-sm">
-              <option value="">11</option>
-              {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <MiniSelect label="Tamaño de letra" className="w-20" value={st.size ?? 11} options={SIZE_OPTIONS} onChange={(n) => chain().setFontSize(toPx(n)).run()} />
             <Sep />
             <Btn title="Negrita (Ctrl+B)" active={st.bold} onClick={() => chain().toggleBold().run()}><Bold size={16} /></Btn>
             <Btn title="Cursiva (Ctrl+I)" active={st.italic} onClick={() => chain().toggleItalic().run()}><Italic size={16} /></Btn>
             <Btn title="Subrayado (Ctrl+U)" active={st.underline} onClick={() => chain().toggleUnderline().run()}><Underline size={16} /></Btn>
             <Btn title="Tachado" active={st.strike} onClick={() => chain().toggleStrike().run()}><Strikethrough size={16} /></Btn>
-            <label title="Color del texto" className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-ink/10 pointer-coarse:h-10 pointer-coarse:w-10">
-              <span className="flex flex-col items-center text-sm font-bold leading-none">A<span className="mt-0.5 block h-[3px] w-4 rounded" style={{ background: st.color }} /></span>
-              <input type="color" aria-label="Color del texto" className="sr-only" value={/^#[0-9a-f]{6}$/i.test(st.color) ? st.color : '#111111'} onChange={(e) => chain().setColor(e.target.value).run()} />
-            </label>
-            <label title="Resaltar" className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-ink/10 pointer-coarse:h-10 pointer-coarse:w-10">
-              <Highlighter size={16} />
-              <input type="color" aria-label="Color de resaltado" className="sr-only" defaultValue="#ffff00" onChange={(e) => chain().setHighlight({ color: e.target.value }).run()} />
-            </label>
+            <ColorPopover title="Color del texto" value={st.color} onPick={(c) => chain().setColor(c).run()} onClear={() => chain().unsetColor().run()} clearLabel="Color automático"
+              icon={<span className="flex flex-col items-center text-sm font-bold leading-none">A<span className="mt-0.5 block h-[3px] w-4 rounded" style={{ background: st.color }} /></span>} />
+            <ColorPopover title="Resaltar" value={hl} palette={HIGHLIGHTS} onPick={(c) => { setHl(c); chain().setHighlight({ color: c }).run() }} onClear={() => chain().unsetHighlight().run()} clearLabel="Quitar resaltado"
+              icon={<Highlighter size={16} />} />
             <Btn title="Quitar formato" onClick={() => chain().unsetAllMarks().clearNodes().run()}><RemoveFormatting size={16} /></Btn>
             </div>
             <Sep />

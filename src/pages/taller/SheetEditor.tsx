@@ -3,7 +3,7 @@ import type { ClipboardEvent, KeyboardEvent as ReactKeyboardEvent, ReactNode } f
 import { Link } from 'react-router-dom'
 import { saveAs } from 'file-saver'
 import {
-  AlignCenter, AlignLeft, AlignRight, Bold, ChevronDown, Download, FilePlus2, FolderOpen, Italic, Paintbrush, Plus, Redo2, Trash2, Undo2,
+  AlignCenter, AlignLeft, AlignRight, Bold, ChevronDown, Download, FilePlus2, FolderOpen, Italic, Columns3, Paintbrush, Plus, Redo2, Rows3, Trash2, Undo2,
 } from 'lucide-react'
 import {
   Evaluator, cellName, colName, emptyBook, emptySheet, formatValue, key, offsetFormula, parseCsv, resize, sheetFromRows, sheetToRows, toCsv, usedSize,
@@ -11,13 +11,15 @@ import {
 import type { Cell, CellStyle, NumFmt, Workbook } from '../../lib/sheet/model'
 import { exportXlsx, importXlsx } from '../../lib/sheet/xlsx'
 import { peekHandoff } from '../../lib/handoff'
+import { ColorPopover, MiniSelect } from './TallerControls'
 
 const ROW_H = 26
 const HEAD_H = 26
 const GUTTER = 52
 const DEF_W = 100
 const STORAGE = 'fp_sheet_draft'
-const FORMATS: [NumFmt, string][] = [['', 'General'], ['int', 'Entero'], ['dec2', '2 decimales'], ['pct', 'Porcentaje'], ['eur', 'Euros'], ['date', 'Fecha']]
+const FORMATS: { value: NumFmt; label: string }[] = [{ value: '', label: 'General' }, { value: 'int', label: 'Entero' }, { value: 'dec2', label: '2 decimales' }, { value: 'pct', label: 'Porcentaje' }, { value: 'eur', label: 'Euros' }, { value: 'date', label: 'Fecha' }]
+const FILLS = ['#ffeb3b', '#c6f26b', '#a5f3fc', '#fbcfe8', '#fed7aa', '#e7e1d5'] as const
 
 interface Pos { r: number; c: number }
 interface Range { r1: number; c1: number; r2: number; c2: number }
@@ -26,7 +28,7 @@ const norm = (a: Pos, b: Pos): Range => ({ r1: Math.min(a.r, b.r), c1: Math.min(
 function Btn({ title, active, disabled, onClick, children }: { title: string; active?: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" title={title} aria-label={title} aria-pressed={active} disabled={disabled} onMouseDown={(e) => e.preventDefault()} onClick={onClick}
-      className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-sm transition disabled:opacity-30 ${active ? 'bg-brand text-white' : 'hover:bg-ink/10'}`}>
+      className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-sm transition disabled:opacity-30 pointer-coarse:h-10 pointer-coarse:min-w-10 ${active ? 'bg-brand text-white' : 'hover:bg-ink/10'}`}>
       {children}
     </button>
   )
@@ -326,8 +328,10 @@ export default function SheetEditor() {
         <div className="mx-auto max-w-7xl px-3 py-2">
           <div className="mb-2 flex flex-wrap items-center gap-3">
             <Link to="/taller" className="text-sm text-ink/55 hover:text-brand">← Taller</Link>
-            <input aria-label="Nombre de la hoja de cálculo" value={title} onChange={(e) => setTitle(e.target.value)} className="order-last min-w-0 basis-full rounded-lg bg-transparent px-2 py-1 font-display sm:order-none sm:basis-0 sm:flex-1 text-lg font-bold hover:bg-ink/5 focus:bg-ink/5 focus:outline-none" />
-            <span className="hidden text-xs text-ink/45 md:inline">{saved === 'saving' ? 'Guardando…' : 'Guardado en este navegador'}</span>
+            <div className="order-last flex min-w-0 basis-full flex-col sm:order-none sm:basis-0 sm:flex-1 sm:flex-row sm:items-center sm:gap-3">
+              <input aria-label="Nombre de la hoja de cálculo" value={title} onChange={(e) => setTitle(e.target.value)} className="min-w-0 rounded-lg bg-transparent px-2 py-1 font-display text-lg font-bold hover:bg-ink/5 focus:bg-ink/5 focus:outline-none sm:flex-1" />
+              <span role="status" className="shrink-0 px-2 text-xs text-ink/45">{saved === 'saving' ? 'Guardando…' : 'Guardado en este navegador'}</span>
+            </div>
             <input ref={openInput} type="file" hidden accept=".xlsx,.csv,.tsv,.txt" onChange={(e) => { void open(e.target.files?.[0]); e.target.value = '' }} />
             <Btn title="Hoja nueva" onClick={reset}><FilePlus2 size={17} /></Btn>
             <Btn title="Abrir un archivo (.xlsx, .csv)" onClick={() => openInput.current?.click()}><FolderOpen size={17} /></Btn>
@@ -355,29 +359,22 @@ export default function SheetEditor() {
             <div className={group('formato')}>
             <Btn title="Negrita (Ctrl+B)" active={allHave((s) => !!s.b)} onClick={() => toggle('b')}><Bold size={16} /></Btn>
             <Btn title="Cursiva (Ctrl+I)" active={allHave((s) => !!s.i)} onClick={() => toggle('i')}><Italic size={16} /></Btn>
-            <label title="Color del texto" className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-ink/10">
-              <span className="flex flex-col items-center text-sm font-bold leading-none">A<span className="mt-0.5 block h-[3px] w-4 rounded" style={{ background: activeCell?.s?.color ?? '#111111' }} /></span>
-              <input type="color" aria-label="Color del texto" className="sr-only" value={activeCell?.s?.color ?? '#111111'} onChange={(e) => applyStyle((s) => ({ ...s, color: e.target.value }))} />
-            </label>
-            <label title="Color de relleno" className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-ink/10">
-              <Paintbrush size={16} />
-              <input type="color" aria-label="Color de relleno" className="sr-only" value={activeCell?.s?.bg ?? '#ffff00'} onChange={(e) => applyStyle((s) => ({ ...s, bg: e.target.value }))} />
-            </label>
-            <Btn title="Sin relleno" onClick={() => applyStyle((s) => ({ ...s, bg: undefined }))}><span className="text-xs font-semibold">Sin relleno</span></Btn>
+            <ColorPopover title="Color del texto" value={activeCell?.s?.color ?? '#16152b'} onPick={(c) => applyStyle((st) => ({ ...st, color: c }))} onClear={() => applyStyle((st) => ({ ...st, color: undefined }))} clearLabel="Color automático"
+              icon={<span className="flex flex-col items-center text-sm font-bold leading-none">A<span className="mt-0.5 block h-[3px] w-4 rounded" style={{ background: activeCell?.s?.color ?? '#16152b' }} /></span>} />
+            <ColorPopover title="Color de relleno" value={activeCell?.s?.bg ?? FILLS[0]} palette={FILLS} onPick={(c) => applyStyle((st) => ({ ...st, bg: c }))} onClear={() => applyStyle((st) => ({ ...st, bg: undefined }))} clearLabel="Sin relleno"
+              icon={<Paintbrush size={16} />} />
             <Sep />
             <Btn title="Alinear a la izquierda" active={allHave((s) => s.align === 'left')} onClick={() => applyStyle((s) => ({ ...s, align: s.align === 'left' ? undefined : 'left' }))}><AlignLeft size={16} /></Btn>
             <Btn title="Centrar" active={allHave((s) => s.align === 'center')} onClick={() => applyStyle((s) => ({ ...s, align: s.align === 'center' ? undefined : 'center' }))}><AlignCenter size={16} /></Btn>
             <Btn title="Alinear a la derecha" active={allHave((s) => s.align === 'right')} onClick={() => applyStyle((s) => ({ ...s, align: s.align === 'right' ? undefined : 'right' }))}><AlignRight size={16} /></Btn>
-            <select aria-label="Formato de número" value={activeCell?.s?.fmt ?? ''} onChange={(e) => applyStyle((s) => ({ ...s, fmt: (e.target.value as NumFmt) || undefined }))} className="ml-1 h-8 rounded-lg border border-line bg-white px-2 text-sm">
-              {FORMATS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
+            <span className="ml-1"><MiniSelect label="Formato de número" className="w-32" value={activeCell?.s?.fmt ?? ''} options={FORMATS} onChange={(v) => applyStyle((st) => ({ ...st, fmt: v || undefined }))} /></span>
             </div>
             <Sep />
             <div className={group('celdas')}>
-            <Btn title="Insertar fila encima" onClick={() => mutate('row', sel.r1, 1)}><span className="text-xs font-semibold">+ Fila</span></Btn>
-            <Btn title="Insertar columna a la izquierda" onClick={() => mutate('col', sel.c1, 1)}><span className="text-xs font-semibold">+ Columna</span></Btn>
-            <Btn title="Eliminar las filas seleccionadas" onClick={() => mutate('row', sel.r1, -(sel.r2 - sel.r1 + 1))}><Trash2 size={14} /><span className="ml-1 text-xs font-semibold">Fila</span></Btn>
-            <Btn title="Eliminar las columnas seleccionadas" onClick={() => mutate('col', sel.c1, -(sel.c2 - sel.c1 + 1))}><Trash2 size={14} /><span className="ml-1 text-xs font-semibold">Columna</span></Btn>
+            <Btn title="Insertar fila encima" onClick={() => mutate('row', sel.r1, 1)}><Plus size={13} /><Rows3 size={16} /></Btn>
+            <Btn title="Insertar columna a la izquierda" onClick={() => mutate('col', sel.c1, 1)}><Plus size={13} /><Columns3 size={16} /></Btn>
+            <Btn title="Eliminar las filas seleccionadas" onClick={() => mutate('row', sel.r1, -(sel.r2 - sel.r1 + 1))}><Trash2 size={13} /><Rows3 size={16} /></Btn>
+            <Btn title="Eliminar las columnas seleccionadas" onClick={() => mutate('col', sel.c1, -(sel.c2 - sel.c1 + 1))}><Trash2 size={13} /><Columns3 size={16} /></Btn>
             </div>
           </div>
 
