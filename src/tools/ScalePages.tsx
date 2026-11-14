@@ -4,6 +4,7 @@ import { PdfCard } from '../components/FileCards'
 import { Segmented } from '../components/Illustrate'
 import { Field, ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
+import { Slider } from '../components/ui'
 import { baseName } from '../lib/files'
 import { PAPER, scalePages } from '../lib/pdf/layout'
 import type { PaperId } from '../lib/pdf/layout'
@@ -28,8 +29,8 @@ function ScaleWork({ files, run, reset }: FrameCtx) {
               value={mode}
               onChange={setMode}
               options={[
-                { value: 'paper', label: 'Un papel', icon: Ruler, desc: 'Todas las páginas se ajustan al papel elegido, sin deformarse.' },
-                { value: 'percent', label: 'Porcentaje', icon: Percent, desc: 'Cada página se hace más grande o más pequeña en la misma proporción.' },
+                { value: 'paper', label: 'Un papel', icon: Ruler, desc: 'Ajusta cada página al papel, sin deformarla.' },
+                { value: 'percent', label: 'Porcentaje', icon: Percent, desc: 'Agranda o reduce todas las páginas por igual.' },
               ]}
             />
           </Field>
@@ -38,9 +39,7 @@ function ScaleWork({ files, run, reset }: FrameCtx) {
               <Segmented<PaperId> label="Papel" value={paper} onChange={setPaper} options={(Object.keys(PAPER) as PaperId[]).map((p) => ({ value: p, label: PAPER[p].label }))} />
             </Field>
           ) : (
-            <Field label={`Tamaño: ${percent}%`}>
-              <input type="range" min={25} max={200} step={5} value={percent} onChange={(e) => setPercent(Number(e.target.value))} />
-            </Field>
+            <Slider label="Tamaño" min={25} max={200} step={5} value={percent} unit="%" onChange={setPercent} />
           )}
         </>
       }

@@ -4,6 +4,7 @@ import { PdfCard } from '../components/FileCards'
 import { Segmented } from '../components/Illustrate'
 import { Field, ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
+import { Checkbox } from '../components/ui'
 import { baseName } from '../lib/files'
 import { PAPER, gridFor, multiPageLayout } from '../lib/pdf/layout'
 import type { PaperId, PerSheet } from '../lib/pdf/layout'
@@ -55,7 +56,7 @@ function MultiWork({ files, run, reset }: FrameCtx) {
           <Field label="Tamaño de la hoja">
             <Segmented<PaperId> label="Papel" value={paper} onChange={setPaper} options={[{ value: 'a4', label: PAPER.a4.label }, { value: 'letter', label: PAPER.letter.label }, { value: 'a3', label: PAPER.a3.label }]} />
           </Field>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4" checked={border} onChange={(e) => setBorder(e.target.checked)} /> Marco alrededor de cada página</label>
+          <Checkbox label="Marco alrededor de cada página" checked={border} onChange={setBorder} />
         </>
       }
       action={{

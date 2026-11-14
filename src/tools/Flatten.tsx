@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FileImage, TextCursorInput } from 'lucide-react'
 import { PdfCard } from '../components/FileCards'
 import { Segmented } from '../components/Illustrate'
+import { RasterNotice } from '../components/EffectPreview'
 import { Field, ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
 import { baseName } from '../lib/files'
@@ -21,17 +22,20 @@ function FlattenWork({ files, run, reset }: FrameCtx) {
     <Workspace
       main={<div className="flex justify-center"><PdfCard file={file} showPages onRemove={reset} /></div>}
       side={
+        <>
         <Field label="Qué aplanar">
           <Segmented<Mode>
             label="Modo"
             value={mode}
             onChange={setMode}
             options={[
-              { value: 'forms', label: 'Formularios', icon: TextCursorInput, desc: 'Los campos rellenados pasan a ser texto fijo. El resto del PDF no cambia.' },
-              { value: 'all', label: 'Todo', icon: FileImage, desc: 'Cada página se convierte en una imagen: nada se puede editar ni seleccionar. El archivo pesa más.' },
+              { value: 'forms', label: 'Formularios', icon: TextCursorInput, desc: 'Los campos rellenados pasan a ser texto fijo.' },
+              { value: 'all', label: 'Todo', icon: FileImage, desc: 'Cada página pasa a ser una imagen; el archivo pesa más.' },
             ]}
           />
         </Field>
+        {mode === 'all' && <RasterNotice />}
+        </>
       }
       action={{
         label: 'Aplanar PDF',
@@ -40,7 +44,7 @@ function FlattenWork({ files, run, reset }: FrameCtx) {
           if (mode === 'all') return [{ name: `${baseName(file)}_aplanado.pdf`, blob: pdfBlob(await rasterizePdf(file, 2, progress)) }]
           const { bytes, fields } = await flattenForms(file)
           if (!fields) throw new Error('Este PDF no tiene campos de formulario. Prueba con «Todo» para convertir las páginas en imágenes.')
-          return [{ name: `${baseName(file)}_aplanado.pdf`, blob: pdfBlob(bytes), note: `Se aplanaron ${fields} campo(s).` }]
+          return [{ name: `${baseName(file)}_aplanado.pdf`, blob: pdfBlob(bytes), note: `Se ${fields === 1 ? 'aplanó 1 campo' : `aplanaron ${fields} campos`}.` }]
         }),
       }}
     />

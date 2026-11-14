@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { EffectPreview } from '../components/EffectPreview'
+import { EffectPreview, RasterNotice } from '../components/EffectPreview'
 import { Segmented } from '../components/Illustrate'
 import { Field, ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
@@ -32,7 +32,7 @@ function ScannerWork({ files, run }: FrameCtx) {
           <Field label="Color">
             <Segmented<'gray' | 'bw'> label="Color" value={bw ? 'bw' : 'gray'} onChange={(v) => setBw(v === 'bw')} options={[{ value: 'gray', label: 'Grises' }, { value: 'bw', label: 'Blanco y negro' }]} />
           </Field>
-          <p className="text-xs text-ink/55">Las páginas se convierten en imágenes: el texto ya no se podrá seleccionar.</p>
+          <RasterNotice />
         </>
       }
       action={{

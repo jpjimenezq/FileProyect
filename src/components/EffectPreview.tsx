@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Maximize2, X } from 'lucide-react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
+import { Notice } from './ui'
 import { renderEffectPreview } from '../lib/pdf/raster'
 import type { PageEffect } from '../lib/pdf/raster'
+
+/** Aviso común de las herramientas que convierten las páginas en imágenes */
+export function RasterNotice() {
+  return <Notice kind="info">El texto dejará de poder seleccionarse.</Notice>
+}
 
 type Show = 'both' | 'Antes' | 'Después'
 

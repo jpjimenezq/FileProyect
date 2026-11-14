@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Moon, SunMoon } from 'lucide-react'
-import { EffectPreview } from '../components/EffectPreview'
+import { EffectPreview, RasterNotice } from '../components/EffectPreview'
 import { Segmented } from '../components/Illustrate'
 import { Field, ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
+import { Checkbox } from '../components/ui'
 import { baseName } from '../lib/files'
 import { pdfBlob } from '../lib/pdf/ops'
 import { invertEffect } from '../lib/pdf/raster'
@@ -29,18 +30,15 @@ function InvertWork({ files, run }: FrameCtx) {
               value={mode}
               onChange={setMode}
               options={[
-                { value: 'dark', label: 'Modo oscuro', icon: Moon, desc: 'Fondo oscuro y texto claro. Los colores conservan su tono (el rojo sigue siendo rojo).' },
-                { value: 'negative', label: 'Negativo', icon: SunMoon, desc: 'Invierte absolutamente todos los colores, como un negativo de foto.' },
+                { value: 'dark', label: 'Modo oscuro', icon: Moon, desc: 'Fondo oscuro y texto claro; los colores conservan su tono.' },
+                { value: 'negative', label: 'Negativo', icon: SunMoon, desc: 'Invierte todos los colores, como un negativo de foto.' },
               ]}
             />
           </Field>
           {mode === 'dark' && (
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" className="mt-0.5 h-4 w-4" checked={keepImages} onChange={(e) => setKeepImages(e.target.checked)} />
-              <span>Dejar las imágenes como están<span className="block text-xs text-ink/55">Las fotos y logotipos no cambian de color. Un escaneo que ocupa toda la página sí se invierte.</span></span>
-            </label>
+            <Checkbox label="Dejar las imágenes como están" description="Fotos y logotipos no cambian de color." checked={keepImages} onChange={setKeepImages} />
           )}
-          <p className="text-xs text-ink/55">Las páginas se convierten en imágenes: el texto ya no se podrá seleccionar.</p>
+          <RasterNotice />
         </>
       }
       action={{

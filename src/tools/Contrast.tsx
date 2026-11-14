@@ -1,9 +1,11 @@
 import { useFitWidth } from '../lib/useFitWidth'
 import { useState } from 'react'
 import { PageCanvas } from '../components/PageCanvas'
+import { RasterNotice } from '../components/EffectPreview'
 import { Segmented } from '../components/Illustrate'
 import { Field, ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
+import { Checkbox, Notice, Slider } from '../components/ui'
 import { baseName } from '../lib/files'
 import { adjustCanvas } from '../lib/pdf/misc'
 import { pdfBlob } from '../lib/pdf/ops'
@@ -16,6 +18,8 @@ const PRESETS: Record<Exclude<Preset, 'custom'>, { brightness: number; contrast:
   dark: { brightness: 0.85, contrast: 1.2, gray: false },
   light: { brightness: 1.2, contrast: 0.9, gray: false },
 }
+
+const pct = (v: number) => `${Math.round(v * 100)}%`
 
 function ContrastWork({ files, run }: FrameCtx) {
   const pageWidth = useFitWidth(420)
@@ -35,7 +39,7 @@ function ContrastWork({ files, run }: FrameCtx) {
   return (
     <Workspace
       main={
-        error ? <p className="text-center text-red-600">{error}</p> : (
+        error ? <Notice kind="error">{error}</Notice> : (
           <div className="flex flex-col items-center gap-3">
             <p className="text-sm font-semibold">Vista previa de la primera página</p>
             <div style={{ filter: `${gray ? 'grayscale(1) ' : ''}brightness(${brightness}) contrast(${contrast})` }}>
@@ -52,16 +56,16 @@ function ContrastWork({ files, run }: FrameCtx) {
               value={preset}
               onChange={choose}
               options={[
-                { value: 'scan', label: 'Limpiar escaneo', desc: 'Más contraste y en grises: deja el papel más blanco y el texto más negro.' },
-                { value: 'dark', label: 'Oscurecer', desc: 'Para documentos desvaídos o con poca tinta.' },
-                { value: 'light', label: 'Aclarar', desc: 'Para escaneos demasiado oscuros.' },
+                { value: 'scan', label: 'Limpiar escaneo', desc: 'Papel más blanco y texto más negro.' },
+                { value: 'dark', label: 'Oscurecer', desc: 'Para documentos desvaídos.' },
+                { value: 'light', label: 'Aclarar', desc: 'Para escaneos oscuros.' },
               ]}
             />
           </Field>
-          <Field label={`Brillo: ${Math.round(brightness * 100)}%`}><input type="range" min={0.5} max={1.8} step={0.05} value={brightness} onChange={(e) => touch(() => setBrightness(Number(e.target.value)))} /></Field>
-          <Field label={`Contraste: ${Math.round(contrast * 100)}%`}><input type="range" min={0.5} max={2.5} step={0.05} value={contrast} onChange={(e) => touch(() => setContrast(Number(e.target.value)))} /></Field>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4" checked={gray} onChange={(e) => touch(() => setGray(e.target.checked))} /> Escala de grises</label>
-          <p className="text-xs text-ink/55">Las páginas se convierten en imágenes: el texto ya no se podrá seleccionar.</p>
+          <Slider label="Brillo" min={0.5} max={1.8} step={0.05} value={brightness} format={pct} onChange={(v) => touch(() => setBrightness(v))} />
+          <Slider label="Contraste" min={0.5} max={2.5} step={0.05} value={contrast} format={pct} onChange={(v) => touch(() => setContrast(v))} />
+          <Checkbox label="Escala de grises" checked={gray} onChange={(v) => touch(() => setGray(v))} />
+          <RasterNotice />
         </>
       }
       action={{
