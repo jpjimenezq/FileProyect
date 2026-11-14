@@ -275,11 +275,11 @@ export function TextEditLayer({ info, blocks, items, setItems, page, enabled, ca
             {on && (
               <div className="absolute z-20 flex gap-1.5" style={{ left: Math.max(0, Math.min(left + w - 8, info.width - (g.kind === 'line' && onWrite ? 230 : 92))), top: Math.max(0, top - 32) }}>
                 {g.kind === 'line' && onWrite && (
-                  <button type="button" onClick={(ev) => { ev.stopPropagation(); setPicked(undefined); onWrite(g) }} className="flex items-center gap-1 rounded-full bg-brand px-2.5 py-1 text-xs font-semibold text-white shadow-lg hover:bg-brand-dark">
+                  <button type="button" onClick={(ev) => { ev.stopPropagation(); setPicked(undefined); onWrite(g) }} className="flex items-center gap-1 rounded-full bg-brand px-2.5 py-1 text-xs pointer-coarse:py-2 font-semibold text-white shadow-lg hover:bg-brand-dark">
                     <PenLine size={13} /> Escribir sobre la raya
                   </button>
                 )}
-                <button type="button" onClick={(ev) => { ev.stopPropagation(); removeGraphic(g) }} className="flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-white shadow-lg hover:bg-red-600">
+                <button type="button" onClick={(ev) => { ev.stopPropagation(); removeGraphic(g) }} className="flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-xs pointer-coarse:py-2 font-semibold text-white shadow-lg hover:bg-red-600">
                   <Trash2 size={13} /> Quitar {WHAT_LABEL[g.kind].toLowerCase()}
                 </button>
               </div>

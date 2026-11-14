@@ -40,7 +40,7 @@ export function PageCanvas({ pdf, pageNum, width, children, overlayRef, overlayP
     if (canvas.current && pts) renderPage(pdf, pageNum, canvas.current, width * 2).catch(() => console.warn('No se pudo renderizar la página'))
   }, [pdf, pageNum, width, pts])
 
-  if (!pts) return <div style={{ width, height: width * 1.3 }} className="animate-pulse bg-gray-200" />
+  if (!pts) return <div style={{ width, height: width * 1.3 }} className="animate-pulse bg-ink/10" />
   const height = (pts.h / pts.w) * width
   const info = { width, height, scale: width / pts.w }
 

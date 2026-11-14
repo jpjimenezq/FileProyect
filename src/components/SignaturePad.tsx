@@ -1,5 +1,8 @@
 import { useRef, useState } from 'react'
+import { Pencil, Type } from 'lucide-react'
 import { inputCls } from './ToolFrame'
+import { Segmented } from './Illustrate'
+import { Button } from './ui'
 
 /** Crea una firma (dibujada o escrita) y la devuelve como PNG transparente en data URL */
 export function SignaturePad({ onDone }: { onDone: (dataUrl: string, ratio: number) => void }) {
@@ -15,7 +18,7 @@ export function SignaturePad({ onDone }: { onDone: (dataUrl: string, ratio: numb
   }
   const ctx = () => {
     const c = canvas.current!.getContext('2d')!
-    c.lineWidth = 3
+    c.lineWidth = 4
     c.lineCap = 'round'
     c.lineJoin = 'round'
     c.strokeStyle = '#111'
@@ -40,7 +43,7 @@ export function SignaturePad({ onDone }: { onDone: (dataUrl: string, ratio: numb
     c.lineTo(x, y)
     c.stroke()
   }
-  const clear = () => { canvas.current!.getContext('2d')!.clearRect(0, 0, 400, 160); setEmpty(true); setTyped('') }
+  const clear = () => { const c = canvas.current!; c.getContext('2d')!.clearRect(0, 0, c.width, c.height); setEmpty(true); setTyped('') }
 
   const use = () => {
     const c = canvas.current!
@@ -48,7 +51,7 @@ export function SignaturePad({ onDone }: { onDone: (dataUrl: string, ratio: numb
       const g = c.getContext('2d')!
       g.clearRect(0, 0, c.width, c.height)
       g.fillStyle = '#111'
-      g.font = 'italic 64px "Brush Script MT", "Segoe Script", cursive'
+      g.font = 'italic 96px "Brush Script MT", "Segoe Script", cursive'
       g.textBaseline = 'middle'
       g.fillText(typed, 16, c.height / 2, c.width - 32)
     }
@@ -66,24 +69,38 @@ export function SignaturePad({ onDone }: { onDone: (dataUrl: string, ratio: numb
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1 text-sm font-medium">
-        {(['draw', 'type'] as const).map((m) => (
-          <button key={m} onClick={() => { setMode(m); clear() }} className={`rounded-md py-1.5 ${mode === m ? 'bg-white shadow' : 'text-gray-600'}`}>{m === 'draw' ? 'Dibujar' : 'Escribir'}</button>
-        ))}
-      </div>
-      {mode === 'type' && <input className={inputCls} placeholder="Tu nombre" value={typed} onChange={(e) => setTyped(e.target.value)} />}
-      <canvas
-        ref={canvas}
-        width={400}
-        height={160}
-        onPointerDown={mode === 'draw' ? down : undefined}
-        onPointerMove={mode === 'draw' ? move : undefined}
-        onPointerUp={() => { drawing.current = false }}
-        className={`w-full touch-none rounded-lg border border-dashed border-gray-400 bg-white ${mode === 'draw' ? 'cursor-crosshair' : 'hidden'}`}
+      <Segmented
+        label="Cómo crear la firma"
+        value={mode}
+        onChange={(m) => { setMode(m); clear() }}
+        options={[{ value: 'draw', label: 'Dibujar', icon: Pencil }, { value: 'type', label: 'Escribir', icon: Type }]}
       />
-      <div className="flex gap-2 text-sm">
-        <button className="flex-1 rounded-lg border border-gray-300 py-1.5 hover:bg-gray-50" onClick={clear}>Borrar</button>
-        <button className="flex-1 rounded-lg bg-gray-800 py-1.5 text-white disabled:opacity-40" disabled={mode === 'draw' ? empty : !typed.trim()} onClick={use}>Usar firma</button>
+      {mode === 'type' && (
+        <>
+          <input className={inputCls} placeholder="Tu nombre" aria-label="Tu nombre" value={typed} onChange={(e) => setTyped(e.target.value)} />
+          <div className="flex h-24 items-center overflow-hidden rounded-2xl border-2 border-ink/25 bg-white px-4 text-[44px] italic leading-none text-ink" style={{ fontFamily: '"Brush Script MT", "Segoe Script", cursive' }}>
+            {typed || <span className="text-base not-italic text-ink/45" style={{ fontFamily: 'inherit' }}>Así se verá tu firma</span>}
+          </div>
+        </>
+      )}
+      <div className={`relative ${mode === 'draw' ? '' : 'hidden'}`}>
+        <canvas
+          ref={canvas}
+          width={600}
+          height={200}
+          aria-label="Lienzo para dibujar tu firma"
+          onPointerDown={mode === 'draw' ? down : undefined}
+          onPointerMove={mode === 'draw' ? move : undefined}
+          onPointerUp={() => { drawing.current = false }}
+          onPointerCancel={() => { drawing.current = false }}
+          className="block aspect-[3/1] w-full cursor-crosshair touch-none rounded-2xl border-2 border-ink/25 bg-white"
+        />
+        {empty && <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-ink/45">Firma aquí con el dedo o el ratón</span>}
+        <span className="pointer-events-none absolute inset-x-5 bottom-8 border-b border-dashed border-ink/20" />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="ghost" onClick={clear}>Borrar</Button>
+        <Button variant="primary" disabled={mode === 'draw' ? empty : !typed.trim()} onClick={use}>Usar firma</Button>
       </div>
     </div>
   )
