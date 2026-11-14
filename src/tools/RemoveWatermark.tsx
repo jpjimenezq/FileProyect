@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Loader2, ShieldAlert } from 'lucide-react'
+import { ShieldAlert } from 'lucide-react'
 import { PageCanvas } from '../components/PageCanvas'
 import { ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx, Output } from '../components/ToolFrame'
+import { Checkbox, Notice, PagePager } from '../components/ui'
 import { baseName } from '../lib/files'
 import { pdfBlob } from '../lib/pdf/ops'
 import { analyzeWatermarks, removeWatermarks } from '../lib/pdf/watermark'
@@ -13,7 +14,7 @@ import { usePdf } from '../lib/usePdf'
 const CHIP: Record<Confidence, string> = {
   alta: 'bg-emerald-100 text-emerald-800',
   media: 'bg-amber-100 text-amber-800',
-  baja: 'bg-gray-100 text-gray-600',
+  baja: 'bg-paper text-ink/60',
 }
 const CHIP_LABEL: Record<Confidence, string> = { alta: 'Probable marca de agua', media: 'Quizá sea una marca', baja: 'Parece un encabezado o un pie' }
 
@@ -57,43 +58,46 @@ function Work({ files, run }: FrameCtx) {
 
   const toggle = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n })
 
-  const main = error || failure ? <p className="text-center text-red-600">{error ?? failure}</p> : (
+  const main = error || failure ? <Notice kind="error">{error ?? failure}</Notice> : (
     <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-3 text-sm">
-        <button aria-label="Página anterior" disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded p-1 hover:bg-gray-200 disabled:opacity-30"><ChevronLeft /></button>
-        <span>Página {page} de {numPages || '…'}</span>
-        <button aria-label="Página siguiente" disabled={page >= numPages} onClick={() => setPage(page + 1)} className="rounded p-1 hover:bg-gray-200 disabled:opacity-30"><ChevronRight /></button>
-      </div>
+      <PagePager page={page} total={numPages || 1} onChange={setPage} />
       <div className="flex flex-wrap items-start justify-center gap-6">
         {([['Antes', pdf], ['Después', afterPdf]] as const).map(([label, doc]) => (
           <figure key={label} className="flex flex-col items-center gap-1.5">
             <figcaption className="text-sm font-semibold">{label}</figcaption>
-            {doc ? <PageCanvas pdf={doc} pageNum={page} width={width} /> : <div className="animate-pulse bg-gray-200" style={{ width, height: width * 1.3 }} />}
+            {doc ? <PageCanvas pdf={doc} pageNum={page} width={width} /> : <div className="animate-pulse rounded bg-ink/10" style={{ width, height: width * 1.3 }} />}
           </figure>
         ))}
       </div>
     </div>
   )
 
+  const pct = Math.round(progress * 100)
   const side = (
     <div className="flex flex-col gap-3">
       {!analysis && !failure && (
-        <p className="flex items-center gap-2 text-sm text-gray-600"><Loader2 className="animate-spin" size={16} /> Buscando marcas de agua… {Math.round(progress * 100)} %</p>
+        <div className="flex flex-col gap-2" role="status">
+          <p className="flex justify-between text-sm font-medium"><span>Buscando marcas de agua…</span><span className="tabular-nums text-ink/60">{pct} %</span></p>
+          <div className="h-2 overflow-hidden rounded-full bg-paper" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+            <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${pct}%` }} />
+          </div>
+        </div>
       )}
       {analysis && !analysis.candidates.length && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">No se encontró ninguna marca de agua que se pueda quitar. Si está dentro de una imagen (un escaneo, una foto), no se puede separar del resto.</p>
+        <Notice kind="warn">No hay ninguna marca que se pueda quitar. Si va dentro de una imagen (un escaneo), no se separa del resto.</Notice>
       )}
       {analysis?.candidates.map((c) => (
-        <label key={c.id} className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 text-sm transition ${selected.has(c.id) ? 'border-brand bg-brand/5' : 'border-gray-200 hover:bg-gray-50'}`}>
-          <input type="checkbox" className="mt-1 h-4 w-4" checked={selected.has(c.id)} onChange={() => toggle(c.id)} />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate font-semibold" title={c.label}>{c.label}</span>
-            <span className="block text-xs text-gray-500">{c.detail}</span>
-            <span className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${CHIP[c.confidence]}`}>{CHIP_LABEL[c.confidence]}</span>
-          </span>
-        </label>
+        <div key={c.id} className={`rounded-xl border p-3 transition ${selected.has(c.id) ? 'border-brand bg-brand/5' : 'border-line hover:bg-paper'}`}>
+          <Checkbox
+            checked={selected.has(c.id)}
+            onChange={() => toggle(c.id)}
+            label={<span className="block truncate font-semibold" title={c.label}>{c.label}</span>}
+            description={c.detail}
+          />
+          <span className={`ml-[1.875rem] mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${CHIP[c.confidence]}`}>{CHIP_LABEL[c.confidence]}</span>
+        </div>
       ))}
-      <p className="flex gap-2 text-xs leading-snug text-gray-500"><ShieldAlert size={15} className="mt-0.5 shrink-0" /> Úsalo solo con documentos tuyos o que tengas permiso para modificar.</p>
+      <p className="flex gap-2 text-xs leading-snug text-ink/60"><ShieldAlert size={15} className="mt-0.5 shrink-0" /> Úsalo solo con documentos tuyos o que tengas permiso para modificar.</p>
     </div>
   )
 

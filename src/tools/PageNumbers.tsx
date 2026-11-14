@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { PdfCard } from '../components/FileCards'
 import { Segmented } from '../components/Illustrate'
-import { Field, ToolFrame, Workspace, inputCls } from '../components/ToolFrame'
+import { Field, ToolFrame, Workspace } from '../components/ToolFrame'
 import type { FrameCtx } from '../components/ToolFrame'
+import { NumberField, Slider } from '../components/ui'
 import { baseName } from '../lib/files'
 import { addPageNumbers, pdfBlob } from '../lib/pdf/ops'
 import type { NumberOptions } from '../lib/pdf/ops'
@@ -19,10 +20,10 @@ const sampleLabel = (o: NumberOptions, total: number) => {
 function PositionPicker({ o, total, onPick }: { o: NumberOptions; total: number; onPick: (p: NumberOptions['position']) => void }) {
   return (
     <div className="mx-auto w-[190px]">
-      <div className="relative h-[250px] rounded border border-gray-400 bg-white shadow-sm">
+      <div className="relative h-[250px] rounded border border-ink/30 bg-white shadow-sm">
         {/* líneas de texto simuladas */}
         <div className="absolute inset-x-6 top-12 flex flex-col gap-2">
-          {[100, 92, 100, 70, 100, 85, 100, 60].map((w, i) => <span key={i} className="block h-[5px] rounded bg-gray-200" style={{ width: `${w}%` }} />)}
+          {[100, 92, 100, 70, 100, 85, 100, 60].map((w, i) => <span key={i} className="block h-[5px] rounded bg-ink/10" style={{ width: `${w}%` }} />)}
         </div>
         {POSITIONS.map((p) => {
           const on = o.position === p
@@ -36,9 +37,9 @@ function PositionPicker({ o, total, onPick }: { o: NumberOptions; total: number;
               className={`absolute flex h-8 w-1/3 items-center ${p[0] === 't' ? 'top-0' : 'bottom-0'} ${p[1] === 'l' ? 'left-0 justify-start pl-1.5' : p[1] === 'c' ? 'left-1/3 justify-center' : 'right-0 justify-end pr-1.5'}`}
             >
               {on ? (
-                <span className="whitespace-nowrap rounded bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">{sampleLabel(o, total)}</span>
+                <span className="whitespace-nowrap rounded bg-brand px-1.5 py-0.5 text-xs font-semibold text-white">{sampleLabel(o, total)}</span>
               ) : (
-                <span className="h-3 w-3 rounded-full border-2 border-dashed border-gray-300 hover:border-brand" />
+                <span className="h-3 w-3 rounded-full border-2 border-dashed border-ink/30 hover:border-brand" />
               )}
             </button>
           )
@@ -75,16 +76,10 @@ function NumbersWork({ files, run, reset }: FrameCtx) {
             />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Empezar en">
-              <input type="number" min={0} className={inputCls} value={o.first} onChange={(e) => set('first', Number(e.target.value))} />
-            </Field>
-            <Field label="Desde la página">
-              <input type="number" min={1} max={numPages || undefined} className={inputCls} value={o.from} onChange={(e) => set('from', Math.max(1, Number(e.target.value)))} />
-            </Field>
+            <NumberField label="Empezar en" value={o.first} onChange={(v) => set('first', v)} min={0} />
+            <NumberField label="Desde la página" value={o.from} onChange={(v) => set('from', v)} min={1} max={numPages || undefined} />
           </div>
-          <Field label={`Tamaño de letra: ${o.size} pt`}>
-            <input type="range" min={8} max={24} value={o.size} onChange={(e) => set('size', Number(e.target.value))} />
-          </Field>
+          <Slider label="Tamaño de letra" value={o.size} onChange={(v) => set('size', v)} min={8} max={24} unit="pt" />
         </>
       }
       action={{

@@ -177,10 +177,11 @@ export function Workspace({ main, side, action }: { main: ReactNode; side?: Reac
     // en < lg el botón vive en una barra fija inferior (solo mientras existe el Workspace): el contenido deja hueco debajo
     <div className="grid gap-6 max-lg:pb-24 lg:grid-cols-[1fr_21rem]">
       <div className="dots min-w-0 rounded-3xl border border-line bg-white p-4 md:p-6">{main}</div>
-      <aside className="flex h-fit min-w-0 flex-col gap-5 rounded-3xl border border-line bg-white p-4 shadow-sm sm:p-5 lg:sticky lg:top-24">
+      <aside className="flex h-fit min-w-0 flex-col gap-5 rounded-3xl border border-line bg-white p-4 shadow-sm sm:p-5 max-lg:[&:not(:has(input,select,textarea,summary,a,[role=radio],button:not([data-ws-action])))]:gap-0 max-lg:[&:not(:has(input,select,textarea,summary,a,[role=radio],button:not([data-ws-action])))]:border-0 max-lg:[&:not(:has(input,select,textarea,summary,a,[role=radio],button:not([data-ws-action])))]:bg-transparent max-lg:[&:not(:has(input,select,textarea,summary,a,[role=radio],button:not([data-ws-action])))]:p-0 max-lg:[&:not(:has(input,select,textarea,summary,a,[role=radio],button:not([data-ws-action])))]:shadow-none lg:sticky lg:top-24">
         {side}
         <div className="max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30 max-lg:border-t max-lg:border-line max-lg:bg-white max-lg:px-4 max-lg:pt-3 max-lg:pb-[calc(0.75rem+env(safe-area-inset-bottom))] max-lg:shadow-[0_-6px_20px_rgba(22,21,43,0.10)] lg:contents">
           <button
+            data-ws-action
             onClick={action.onClick}
             disabled={action.disabled}
             className="mx-auto flex w-full max-w-lg items-center justify-center gap-2 rounded-2xl bg-brand px-6 py-3.5 text-lg font-semibold text-white shadow-lg shadow-brand/30 transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none lg:max-w-none lg:py-4"

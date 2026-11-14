@@ -4,6 +4,7 @@ import { PdfCard } from '../components/FileCards'
 import { ImagePicker, useObjectUrl } from '../components/ImagePicker'
 import { Segmented } from '../components/Illustrate'
 import { Field, ToolFrame, Workspace, inputCls } from '../components/ToolFrame'
+import { ColorField, Slider } from '../components/ui'
 import type { FrameCtx } from '../components/ToolFrame'
 import { baseName } from '../lib/files'
 import { addWatermark, pdfBlob, watermarkPositions } from '../lib/pdf/ops'
@@ -112,17 +113,13 @@ function WatermarkWork({ files, run, reset }: FrameCtx) {
           {mode === 'text' ? (
             <>
               <Field label="Texto de la marca"><input className={inputCls} value={text} onChange={(e) => setText(e.target.value)} /></Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label={`Tamaño: ${size}`}><input type="range" min={14} max={140} value={size} onChange={(e) => setSize(Number(e.target.value))} /></Field>
-                <Field label="Color"><input type="color" className="h-10 w-full rounded-xl border border-line" value={color} onChange={(e) => setColor(e.target.value)} /></Field>
-              </div>
+              <Slider label="Tamaño" value={size} onChange={setSize} min={14} max={140} unit="pt" />
+              <ColorField label="Color" value={color} onChange={setColor} />
             </>
           ) : (
             <>
               <Field label="Imagen de la marca"><ImagePicker file={image} onChange={setImage} /></Field>
-              <Field label={`Tamaño: ${Math.round(imageScale * 100)}% del ancho de la hoja`}>
-                <input type="range" min={0.05} max={1} step={0.05} value={imageScale} onChange={(e) => setImageScale(Number(e.target.value))} />
-              </Field>
+              <Slider label="Tamaño (ancho de la hoja)" value={imageScale} onChange={setImageScale} min={0.05} max={1} step={0.05} format={(v) => String(Math.round(v * 100))} unit="%" />
             </>
           )}
 
@@ -152,14 +149,12 @@ function WatermarkWork({ files, run, reset }: FrameCtx) {
             </Field>
           )}
 
-          <Field label={`Transparencia: ${Math.round((1 - opacity) * 100)}%`}>
-            <input type="range" min={0.05} max={1} step={0.05} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} />
-          </Field>
+          <Slider label="Transparencia" value={Number((1 - opacity).toFixed(2))} onChange={(t) => setOpacity(Number((1 - t).toFixed(2)))} min={0} max={0.95} step={0.05} format={(v) => String(Math.round(v * 100))} unit="%" />
           <Field label="Inclinación">
             <div className="grid grid-cols-4 gap-1.5">
               {[[0, 'Recta'], [45, 'Diagonal'], [-45, 'Inversa'], [90, 'Vertical']].map(([deg, name]) => (
-                <button key={deg} type="button" onClick={() => setRotation(Number(deg))} title={String(name)} className={`flex flex-col items-center gap-1 rounded-xl border-2 py-1.5 text-[10px] font-normal ${rotation === deg ? 'border-brand bg-brand/10 text-brand' : 'border-line hover:border-ink/30'}`}>
-                  <span className="block h-1 w-6 rounded bg-current" style={{ transform: `rotate(${-Number(deg)}deg)` }} />
+                <button key={deg} type="button" onClick={() => setRotation(Number(deg))} title={String(name)} className={`flex flex-col items-center gap-1 rounded-xl border-2 py-1.5 text-xs font-medium ${rotation === deg ? 'border-brand bg-brand/10 text-brand' : 'border-line hover:border-ink/30'}`}>
+                  <span className="flex h-6 items-center"><span className="block h-1 w-6 rounded bg-current" style={{ transform: `rotate(${-Number(deg)}deg)` }} /></span>
                   {name}
                 </button>
               ))}

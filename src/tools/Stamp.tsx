@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { Image as ImageIcon, Type } from 'lucide-react'
 import { PdfCard } from '../components/FileCards'
 import { ImagePicker, useObjectUrl } from '../components/ImagePicker'
 import { Segmented } from '../components/Illustrate'
 import { Field, ToolFrame, Workspace, inputCls } from '../components/ToolFrame'
+import { Checkbox, ColorField, Slider } from '../components/ui'
 import type { FrameCtx } from '../components/ToolFrame'
 import { baseName } from '../lib/files'
 import { addStamp, stampCenter } from '../lib/pdf/layout'
@@ -14,7 +16,6 @@ const PAGE_W = 595
 const PAGE_H = 842
 const POSITIONS: StampPosition[] = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br']
 const PRESETS = ['APROBADO', 'BORRADOR', 'CONFIDENCIAL', 'COPIA', 'URGENTE', 'PAGADO']
-const COLORS = ['#16a34a', '#d32f2f', '#2563eb', '#16152b']
 
 let measure: HTMLCanvasElement | undefined
 const textWidth = (text: string, size: number) => {
@@ -92,6 +93,15 @@ function Preview(p: PreviewProps) {
   )
 }
 
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3 border-t border-line pt-4 first:border-t-0 first:pt-0">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-ink/50">{title}</h3>
+      {children}
+    </section>
+  )
+}
+
 function StampWork({ files, run, reset }: FrameCtx) {
   const file = files[0]
   const [mode, setMode] = useState<'text' | 'image'>('text')
@@ -121,46 +131,48 @@ function StampWork({ files, run, reset }: FrameCtx) {
       }
       side={
         <>
-          <Segmented<'text' | 'image'> label="Tipo de sello" value={mode} onChange={setMode} options={[{ value: 'text', label: 'Texto', icon: Type }, { value: 'image', label: 'Imagen', icon: ImageIcon }]} />
-
-          {mode === 'text' ? (
-            <>
+          <Section title="Contenido">
+            <Segmented<'text' | 'image'> label="Tipo de sello" value={mode} onChange={setMode} options={[{ value: 'text', label: 'Texto', icon: Type }, { value: 'image', label: 'Imagen', icon: ImageIcon }]} />
+            {mode === 'text' ? (
               <Field label="Texto del sello">
                 <input className={inputCls} value={text} onChange={(e) => setText(e.target.value)} />
                 <span className="flex flex-wrap gap-1.5">
-                  {PRESETS.map((t) => <button key={t} type="button" onClick={() => setText(t)} className="rounded-full border border-line px-2.5 py-0.5 text-xs font-semibold hover:border-brand hover:text-brand">{t}</button>)}
-                  <button type="button" onClick={() => setText(new Date().toLocaleDateString('es-ES'))} className="rounded-full border border-line px-2.5 py-0.5 text-xs font-semibold hover:border-brand hover:text-brand">Fecha de hoy</button>
+                  {PRESETS.map((t) => <button key={t} type="button" onClick={() => setText(t)} className="rounded-full border border-line px-2.5 py-1 text-xs font-semibold hover:border-brand hover:text-brand">{t}</button>)}
+                  <button type="button" onClick={() => setText(new Date().toLocaleDateString('es-ES'))} className="rounded-full border border-line px-2.5 py-1 text-xs font-semibold hover:border-brand hover:text-brand">Fecha de hoy</button>
                 </span>
               </Field>
-              <Field label={`Tamaño: ${size}`}><input type="range" min={12} max={90} value={size} onChange={(e) => setSize(Number(e.target.value))} /></Field>
-              <Field label="Color">
-                <span className="flex gap-2">
-                  {COLORS.map((c) => <button key={c} type="button" aria-label={`Color ${c}`} onClick={() => setColor(c)} className={`h-8 w-8 rounded-full border-2 ${color === c ? 'border-ink' : 'border-white shadow'}`} style={{ background: c }} />)}
-                  <input type="color" aria-label="Otro color" className="h-8 w-8 rounded-full border border-line" value={color} onChange={(e) => setColor(e.target.value)} />
-                </span>
-              </Field>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4" checked={frame} onChange={(e) => setFrame(e.target.checked)} /> Con marco, como un sello</label>
-            </>
-          ) : (
-            <>
+            ) : (
               <Field label="Imagen del sello"><ImagePicker file={image} onChange={setImage} /></Field>
-              <Field label={`Tamaño: ${Math.round(imageScale * 100)}% del ancho de la hoja`}><input type="range" min={0.05} max={0.8} step={0.05} value={imageScale} onChange={(e) => setImageScale(Number(e.target.value))} /></Field>
-            </>
-          )}
+            )}
+          </Section>
 
-          <Field label="Inclinación">
-            <Segmented<number> label="Inclinación" value={rotation} onChange={setRotation} options={[{ value: 0, label: 'Recta' }, { value: -12, label: 'Inclinada' }, { value: 90, label: 'Vertical' }]} />
-          </Field>
-          <Field label={`Transparencia: ${Math.round((1 - opacity) * 100)}%`}><input type="range" min={0.2} max={1} step={0.05} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} /></Field>
-          <Field label="En qué páginas">
-            <select className={inputCls} value={pages} onChange={(e) => setPages(e.target.value as StampPages)}>
-              <option value="first">Solo la primera</option>
-              <option value="last">Solo la última</option>
-              <option value="all">Todas</option>
-              <option value="odd">Las impares</option>
-              <option value="even">Las pares</option>
-            </select>
-          </Field>
+          <Section title="Aspecto">
+            {mode === 'text' ? (
+              <>
+                <Slider label="Tamaño" value={size} onChange={setSize} min={12} max={90} unit="pt" />
+                <ColorField label="Color" value={color} onChange={setColor} />
+                <Checkbox checked={frame} onChange={setFrame} label="Con marco, como un sello" />
+              </>
+            ) : (
+              <Slider label="Tamaño (ancho de la hoja)" value={imageScale} onChange={setImageScale} min={0.05} max={0.8} step={0.05} format={(v) => String(Math.round(v * 100))} unit="%" />
+            )}
+            <Field label="Inclinación">
+              <Segmented<number> label="Inclinación" value={rotation} onChange={setRotation} options={[{ value: 0, label: 'Recta' }, { value: -12, label: 'Inclinada' }, { value: 90, label: 'Vertical' }]} />
+            </Field>
+            <Slider label="Transparencia" value={Number((1 - opacity).toFixed(2))} onChange={(t) => setOpacity(Number((1 - t).toFixed(2)))} min={0} max={0.8} step={0.05} format={(v) => String(Math.round(v * 100))} unit="%" />
+          </Section>
+
+          <Section title="Dónde">
+            <Field label="En qué páginas">
+              <Segmented<StampPages>
+                label="En qué páginas"
+                value={pages}
+                onChange={setPages}
+                options={[{ value: 'first', label: 'Primera' }, { value: 'last', label: 'Última' }, { value: 'all', label: 'Todas' }, { value: 'odd', label: 'Impares' }, { value: 'even', label: 'Pares' }]}
+              />
+            </Field>
+            <p className="text-xs text-ink/55">La posición se elige en la hoja de la izquierda.</p>
+          </Section>
         </>
       }
       action={{
