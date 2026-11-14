@@ -4,7 +4,7 @@ import { ApiError, apiFetch } from './api'
 export const CHUNK = 9000
 export const MAX_DOC_CHARS = 200_000
 
-export type AiTask = 'summarize' | 'translate' | 'markdown'
+export type AiTask = 'summarize' | 'translate' | 'markdown' | 'ask'
 
 export async function aiCall(task: AiTask, text: string, options: Record<string, string> = {}): Promise<string> {
   let res: Response
@@ -111,4 +111,71 @@ export async function cleanMarkdown(markdown: string, progress?: Progress) {
   let done = 0
   const out = await mapLimit(chunks, 3, (c) => aiCall('markdown', c), () => progress?.(++done / chunks.length))
   return out.join('\n\n') + '\n'
+}
+
+/** Máximo de caracteres de fragmentos por pregunta (el servidor admite 20.000 por petición) */
+export const ASK_CHARS = 18_000
+const FRAGMENT = 1500
+
+const STOP = new Set(
+  ('de la el en y a los las del se que un una por con para es al lo como mas pero sus le ya o fue este ha si porque esta son entre cuando muy sin sobre ' +
+    'tambien me hasta hay donde quien desde todo nos durante todos uno les ni contra otros ese eso ante ellos e esto mi antes algunos que unos yo otro otras otra ' +
+    'el tanto esa estos mucho quienes nada muchos cual poco ella estar estas algunas algo nosotros cual cuales cuanto cuantos cuantas dice dicen habla trata ' +
+    'the of and to in is are what which who how does do this that with for on about where when why from document pdf').split(' '),
+)
+
+const plain = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
+/** Palabras con contenido de una pregunta: sin tildes, mayúsculas ni palabras vacías */
+export function keywords(question: string): string[] {
+  const words = plain(question).split(/[^a-z0-9ñ]+/).filter((w) => w.length > 2 && !STOP.has(w))
+  return [...new Set(words)]
+}
+
+/**
+ * Elige los fragmentos del documento más relevantes para la pregunta y los devuelve con la marca «[p. N]» al principio de cada uno.
+ * Si todo cabe en `limit` se envía el documento entero; si no, se puntúa cada fragmento por las palabras de la pregunta que contiene.
+ */
+export function pickFragments(pages: string[], question: string, limit = ASK_CHARS): string {
+  const all: { page: number; index: number; text: string; score: number }[] = []
+  pages.forEach((pageText, i) => {
+    if (!pageText.trim()) return
+    for (const part of chunkText(pageText, FRAGMENT)) all.push({ page: i + 1, index: all.length, text: `[p. ${i + 1}] ${part.trim()}`, score: 0 })
+  })
+  const words = keywords(question)
+  for (const f of all) {
+    const t = plain(f.text)
+    f.score = words.reduce((sum, w) => {
+      const n = t.split(w).length - 1
+      return sum + (n ? 1 + Math.min(n - 1, 4) * 0.25 : 0)
+    }, 0)
+  }
+  const ranked = [...all].sort((a, b) => b.score - a.score || a.index - b.index)
+  const chosen: typeof all = []
+  let used = 0
+  for (const f of ranked) {
+    const cost = f.text.length + 2
+    if (used + cost > limit) continue
+    chosen.push(f)
+    used += cost
+  }
+  return chosen.sort((a, b) => a.index - b.index).map((f) => f.text).join('\n\n')
+}
+
+export interface Turn { role: 'user' | 'assistant'; text: string }
+
+/** Últimos turnos de la conversación como texto plano para dar contexto a la pregunta */
+export function formatHistory(turns: Turn[], count = 3): string {
+  return turns
+    .slice(-count * 2)
+    .map((t) => `${t.role === 'user' ? 'Usuario' : 'Asistente'}: ${t.text.replace(/\s+/g, ' ').slice(0, 600)}`)
+    .join('\n')
+}
+
+/** Responde una pregunta sobre el documento usando solo los fragmentos más relevantes */
+export async function askPdf(pages: string[], question: string, history: Turn[] = []) {
+  const q = question.trim()
+  const fragments = pickFragments(pages, q)
+  if (!fragments) throw new Error('No se encontró texto en el PDF. Si es un escaneo, usa primero la herramienta OCR.')
+  return aiCall('ask', fragments, { question: q, history: formatHistory(history) })
 }

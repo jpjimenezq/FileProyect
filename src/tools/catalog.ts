@@ -1,7 +1,7 @@
 import {
   ArrowDownUp, Columns2, Crop, EyeOff, FileCode2, FileImage, FileOutput, FileText, Globe, Hash, Image, Languages,
   LockOpen, Merge, Minimize2, PenLine, Pencil, Presentation, RotateCw, ScanLine, ScanText, Sheet, ShieldCheck, Sparkles,
-  Split, Stamp, TextCursorInput, Trash2, Wrench, FileCheck2, FileMinus, FileType, Images, Layers, MessageSquareOff, Tags, LayoutGrid, Scaling, BadgeCheck, Contrast, Scan, AlignLeft, StretchVertical, Paperclip, Bookmark, SunMedium, ImageUp, Eraser, FilePlus2, Shuffle, SplitSquareHorizontal, PanelTop,
+  Split, Stamp, TextCursorInput, Trash2, Wrench, FileCheck2, FileMinus, FileType, Images, Layers, MessageSquareOff, Tags, LayoutGrid, Scaling, BadgeCheck, Contrast, Scan, AlignLeft, StretchVertical, Paperclip, Bookmark, SunMedium, ImageUp, Eraser, FilePlus2, Shuffle, SplitSquareHorizontal, PanelTop, MessagesSquare,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -100,6 +100,7 @@ export const tools: ToolDef[] = [
   t('summarize', 'resumir-pdf', 'Resumir con IA', 'Obtén un resumen de tu PDF con inteligencia artificial.', 'ia', Sparkles, 1),
   t('translate', 'traducir-pdf', 'Traducir PDF', 'Traduce tu PDF a otro idioma con IA.', 'ia', Languages, 1),
   t('pdf-to-md', 'pdf-a-markdown', 'PDF a Markdown', 'Convierte tu PDF en texto Markdown.', 'ia', FileCode2, 1),
+  t('ask-pdf', 'preguntar-al-pdf', 'Preguntar al PDF', 'Haz preguntas sobre tu documento y recibe respuestas con la página.', 'ia', MessagesSquare, 1),
 ]
 
 export const toolById = (id: string) => tools.find((x) => x.id === id)!

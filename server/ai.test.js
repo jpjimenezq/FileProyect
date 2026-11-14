@@ -64,3 +64,25 @@ test('sin clave la IA no está disponible', async () => {
   await assert.rejects(complete('summarize', 'texto'), { status: 503 })
   process.env.DEEPSEEK_API_KEY = key
 })
+
+test('ask envía fragmentos, pregunta e historial y valida longitudes', async (t) => {
+  const { server, state, url } = await mockServer()
+  t.after(() => server.close())
+  Object.assign(process.env, { DEEPSEEK_API_KEY: 'sk-test', DEEPSEEK_BASE_URL: url })
+
+  const out = await complete('ask', '[p. 2] El plazo es de 30 días.', { question: '¿Cuál es el plazo?', history: 'Usuario: hola' })
+  assert.equal(out, 'resultado simulado')
+  assert.match(state.last.body.messages[0].content, /\(p\. N\)/)
+  const user = state.last.body.messages[1].content
+  assert.match(user, /\[p\. 2\] El plazo/)
+  assert.match(user, /Pregunta actual: ¿Cuál es el plazo\?/)
+  assert.match(user, /Usuario: hola/)
+
+  state.last = null
+  await assert.rejects(complete('ask', '[p. 1] x', {}), { status: 400 })
+  await assert.rejects(complete('ask', '[p. 1] x', { question: '   ' }), { status: 400 })
+  await assert.rejects(complete('ask', '[p. 1] x', { question: 'a'.repeat(501) }), { status: 413 })
+  await assert.rejects(complete('ask', '[p. 1] x', { question: 'a', history: 'h'.repeat(4001) }), { status: 413 })
+  await assert.rejects(complete('ask', 'x'.repeat(20_001), { question: 'a' }), { status: 413 })
+  assert.equal(state.last, null)
+})

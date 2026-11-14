@@ -51,6 +51,7 @@ export const implemented: Record<string, ComponentType> = {
   summarize: lazy(() => import('./Summarize')),
   translate: lazy(() => import('./Translate')),
   'header-footer': lazy(() => import('./HeaderFooter')),
+  'ask-pdf': lazy(() => import('./AskPdf')),
   ...Object.fromEntries(
     ['compress', 'repair', 'pdf-to-pdfa', 'word-to-pdf', 'ppt-to-pdf', 'excel-to-pdf', 'html-to-pdf', 'pdf-to-word', 'pdf-to-ppt', 'protect', 'unlock'].map((id) => [id, server(id)]),
   ),

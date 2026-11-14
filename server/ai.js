@@ -1,6 +1,8 @@
 import { UserError } from './exec.js'
 
 export const MAX_CHARS = 20_000
+export const MAX_QUESTION = 500
+export const MAX_HISTORY = 4_000
 
 const LANGUAGES = {
   es: 'español', en: 'inglés', fr: 'francés', de: 'alemán', pt: 'portugués', it: 'italiano', ca: 'catalán',
@@ -42,6 +44,23 @@ const TASKS = {
       'formatea listas y tablas si las reconoces. No resumas, no añadas ni quites contenido. ' +
       `Devuelve solo el Markdown. ${DOC_RULE}`,
   },
+  ask: {
+    temperature: 0.2,
+    system: () =>
+      'Respondes preguntas sobre un documento. Recibes fragmentos del documento, cada uno marcado con su página como «[p. N]», y la pregunta del usuario. ' +
+      'Responde en el mismo idioma de la pregunta, de forma clara y breve, usando solo lo que dicen los fragmentos. ' +
+      'Cita las páginas de donde sale cada dato con el formato (p. N), por ejemplo (p. 3) o (p. 2, 5). ' +
+      'Si los fragmentos no contienen la respuesta, dilo claramente («El documento no menciona esto») y no inventes nada ni uses conocimiento externo. ' +
+      `${DOC_RULE}`,
+    /** Parte del mensaje de usuario que va fuera del documento: pregunta validada y turnos previos */
+    user: ({ question, history }) => {
+      if (typeof question !== 'string' || !question.trim()) throw new UserError('Escribe una pregunta.')
+      if (question.length > MAX_QUESTION) throw new UserError(`La pregunta supera ${MAX_QUESTION} caracteres.`, 413)
+      if (history != null && typeof history !== 'string') throw new UserError('Historial no válido.')
+      if (history && history.length > MAX_HISTORY) throw new UserError(`El historial supera ${MAX_HISTORY} caracteres.`, 413)
+      return (history ? `Conversación previa:\n${history}\n\n` : '') + `Pregunta actual: ${question.trim()}`
+    },
+  },
 }
 
 export const aiEnabled = () => Boolean(process.env.DEEPSEEK_API_KEY)
@@ -64,6 +83,7 @@ export async function complete(task, text, options = {}) {
   if (text.length > MAX_CHARS) throw new UserError(`El texto supera ${MAX_CHARS} caracteres por petición.`, 413)
 
   const system = def.system(options)
+  const extra = def.user ? `\n\n${def.user(options)}` : ''
   spend(text.length)
 
   let res
@@ -74,7 +94,7 @@ export async function complete(task, text, options = {}) {
       body: JSON.stringify({
         model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
         temperature: def.temperature,
-        messages: [{ role: 'system', content: system }, { role: 'user', content: `<documento>\n${text}\n</documento>` }],
+        messages: [{ role: 'system', content: system }, { role: 'user', content: `<documento>\n${text}\n</documento>${extra}` }],
       }),
       signal: AbortSignal.timeout(120_000),
     })
