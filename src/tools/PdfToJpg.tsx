@@ -47,9 +47,9 @@ function PdfToJpgWork({ files, run, reset }: FrameCtx) {
             value={scale}
             onChange={setScale}
             options={[
-              { value: 1.4, label: 'Ligera', icon: Smartphone, desc: 'Archivos pequeños, para compartir (~100 ppp).' },
-              { value: 2, label: 'Normal', icon: Monitor, desc: 'Para leer en pantalla (~150 ppp).' },
-              { value: 3, label: 'Máxima', icon: Printer, desc: 'La más nítida y pesada, para imprimir (~220 ppp).' },
+              { value: 1.4, label: 'Compartir', icon: Smartphone, desc: 'Para compartir: archivos pequeños.' },
+              { value: 2, label: 'Pantalla', icon: Monitor, desc: 'Para pantalla: nítida y de peso medio.' },
+              { value: 3, label: 'Imprimir', icon: Printer, desc: 'Para imprimir: la más nítida y pesada.' },
             ]}
           />
         </Field>

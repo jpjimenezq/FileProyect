@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PdfCard } from '../components/FileCards'
 import { ToolFrame, Workspace } from '../components/ToolFrame'
+import { Checkbox } from '../components/ui'
 import type { FrameCtx } from '../components/ToolFrame'
 import { baseName } from '../lib/files'
 import { pdfPlainTextPages } from '../lib/pdf/markdown'
@@ -17,11 +18,7 @@ function TextWork({ files, run, reset }: FrameCtx) {
       main={<div className="flex justify-center"><PdfCard file={file} showPages onRemove={reset} /></div>}
       side={
         <>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="h-4 w-4" checked={separate} onChange={(e) => setSeparate(e.target.checked)} />
-            Marcar dónde empieza cada página
-          </label>
-          <p className="text-xs text-ink/55">Si el PDF es un escaneo o una foto, usa antes «OCR PDF».</p>
+          <Checkbox checked={separate} onChange={setSeparate} label="Marcar dónde empieza cada página" description="Si es un escaneo, usa antes «OCR PDF»." />
         </>
       }
       action={{

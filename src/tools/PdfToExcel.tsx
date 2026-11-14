@@ -3,6 +3,7 @@ import { Files, Sheet } from 'lucide-react'
 import { PdfCard } from '../components/FileCards'
 import { Segmented } from '../components/Illustrate'
 import { ToolFrame, Workspace } from '../components/ToolFrame'
+import { Checkbox } from '../components/ui'
 import type { FrameCtx } from '../components/ToolFrame'
 import { baseName } from '../lib/files'
 import { loadPdf } from '../lib/pdf/render'
@@ -29,11 +30,7 @@ function ExcelWork({ files, run, reset }: FrameCtx) {
               { value: 'one', label: 'Una sola', icon: Sheet, desc: 'Todas las tablas seguidas en una hoja.' },
             ]}
           />
-          <label className="flex items-start gap-2 text-sm">
-            <input type="checkbox" className="mt-0.5 h-4 w-4" checked={includeText} onChange={(e) => setIncludeText(e.target.checked)} />
-            <span>Incluir también el texto que no está en tablas</span>
-          </label>
-          <p className="text-sm text-gray-600">Si el PDF es un escaneo, usa antes OCR.</p>
+          <Checkbox checked={includeText} onChange={setIncludeText} label="Incluir el texto que no está en tablas" description="Si es un escaneo, usa antes OCR." />
         </div>
       }
       action={{

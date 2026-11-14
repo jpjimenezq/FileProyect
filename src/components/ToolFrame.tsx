@@ -28,7 +28,8 @@ export interface FrameCtx {
   files: File[]
   setFiles: (files: File[]) => void
   addFiles: (files: File[]) => void
-  run: (job: (progress: (fraction: number) => void) => Promise<Output[]>) => void
+  /** `progress(fracción, texto?)`: el texto opcional (p. ej. «Página 3 de 10») se muestra bajo la barra */
+  run: (job: (progress: (fraction: number, label?: string) => void) => Promise<Output[]>) => void
   reset: () => void
 }
 
@@ -54,6 +55,7 @@ export function ToolFrame({ id, accept, multiple, children, emptyExtra, notice }
   })
   const [stage, setStage] = useState<Stage>('edit')
   const [progress, setProgress] = useState(0)
+  const [progressLabel, setProgressLabel] = useState<string>()
   const [outputs, setOutputs] = useState<Output[]>([])
   const [error, setError] = useState<{ message: string; code?: string }>()
 
@@ -62,9 +64,10 @@ export function ToolFrame({ id, accept, multiple, children, emptyExtra, notice }
   const run: FrameCtx['run'] = async (job) => {
     setError(undefined)
     setProgress(0)
+    setProgressLabel(undefined)
     setStage('processing')
     try {
-      const result = await job(setProgress)
+      const result = await job((fraction, label) => { setProgress(fraction); setProgressLabel(label) })
       setOutputs(result)
       setStage('done')
     } catch (e) {
@@ -127,6 +130,7 @@ export function ToolFrame({ id, accept, multiple, children, emptyExtra, notice }
           <div className="h-2 w-64 max-w-[80%] overflow-hidden rounded-full bg-paper" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
             <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />
           </div>
+          {progressLabel && <p className="text-sm text-ink/60">{progressLabel}</p>}
         </div>
       )}
 

@@ -2,18 +2,20 @@ import { useState } from 'react'
 import { PDFDocument } from 'pdf-lib'
 import { createWorker } from 'tesseract.js'
 import { FileSearch, FileText } from 'lucide-react'
-import { PdfCard } from '../components/FileCards'
+import { PageThumb } from '../components/PageThumb'
+import { RemoveButton } from '../components/FileCards'
 import { Segmented } from '../components/Illustrate'
-import { Field, ToolFrame, Workspace, inputCls } from '../components/ToolFrame'
+import { Field, ToolFrame, Workspace } from '../components/ToolFrame'
+import { Select } from '../components/ui'
 import type { FrameCtx, Output } from '../components/ToolFrame'
-import { baseName } from '../lib/files'
+import { baseName, fmtSize } from '../lib/files'
 import { pdfBlob } from '../lib/pdf/ops'
 import { loadPdf, renderPage } from '../lib/pdf/render'
 import { usePdf } from '../lib/usePdf'
 
 function OcrWork({ files, run, reset }: FrameCtx) {
   const file = files[0]
-  const { numPages } = usePdf(file)
+  const { pdf: doc, numPages } = usePdf(file)
   const [lang, setLang] = useState('spa')
   const [output, setOutput] = useState<'pdf' | 'txt'>('pdf')
 
@@ -32,7 +34,7 @@ function OcrWork({ files, run, reset }: FrameCtx) {
           const page = await PDFDocument.load(new Uint8Array(data.pdf))
           ;(await merged.copyPages(page, [0])).forEach((p) => merged.addPage(p))
         }
-        progress(n / pdf.numPages)
+        progress(n / pdf.numPages, n < pdf.numPages ? `Página ${n + 1} de ${pdf.numPages}` : undefined)
       }
       const out: Output[] = output === 'pdf'
         ? [{ name: `${baseName(file)}_ocr.pdf`, blob: pdfBlob(await merged.save()) }]
@@ -45,20 +47,27 @@ function OcrWork({ files, run, reset }: FrameCtx) {
 
   return (
     <Workspace
-      main={<div className="flex justify-center"><PdfCard file={file} showPages onRemove={reset} /></div>}
+      main={
+        <div className="flex justify-center">
+          <div className="relative flex flex-col items-center gap-2">
+            <RemoveButton onClick={reset} />
+            {doc ? <PageThumb pdf={doc} pageNum={1} width={280} /> : <div className="h-[364px] w-[280px] animate-pulse bg-paper" />}
+            <p className="max-w-[280px] truncate text-center text-sm font-medium" title={file.name}>{file.name}</p>
+            <p className="text-xs text-ink/60">{fmtSize(file.size)}{numPages ? ` · ${numPages} ${numPages === 1 ? 'página' : 'págs.'}` : ''}</p>
+          </div>
+        </div>
+      }
       side={
         <>
-          <Field label="Idioma del documento">
-            <select className={inputCls} value={lang} onChange={(e) => setLang(e.target.value)}>
-              <option value="spa">Español</option>
-              <option value="eng">Inglés</option>
-              <option value="fra">Francés</option>
-              <option value="deu">Alemán</option>
-              <option value="por">Portugués</option>
-              <option value="ita">Italiano</option>
-              <option value="spa+eng">Español + Inglés</option>
-            </select>
-          </Field>
+          <Select label="Idioma del documento" hint="La primera vez se descarga el idioma (necesitas conexión)." value={lang} onChange={(e) => setLang(e.target.value)}>
+            <option value="spa">Español</option>
+            <option value="eng">Inglés</option>
+            <option value="fra">Francés</option>
+            <option value="deu">Alemán</option>
+            <option value="por">Portugués</option>
+            <option value="ita">Italiano</option>
+            <option value="spa+eng">Español + Inglés</option>
+          </Select>
           <Field label="Resultado">
             <Segmented<'pdf' | 'txt'>
               label="Resultado"
@@ -70,7 +79,6 @@ function OcrWork({ files, run, reset }: FrameCtx) {
               ]}
             />
           </Field>
-          <p className="text-xs text-gray-500">La primera vez se descargan los datos del idioma (necesitas conexión). El OCR puede tardar unos segundos por página.</p>
         </>
       }
       action={{ label: 'Aplicar OCR', disabled: !numPages, onClick: start }}
